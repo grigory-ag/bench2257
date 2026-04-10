@@ -1,0 +1,12 @@
+.git
+.gitignore
+
+Dockerfile
+.dockerignore
+
+.vscode/
+.idea/
+
+node_modules/
+npm-debug.log*
+.DS_Store

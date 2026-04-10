@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bench - Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --accent-blue: #1f6feb;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 30px; background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .logout-btn {
+            background: none; border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 5px 15px; border-radius: 6px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
+        
+        .grid-container {
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+            gap: 25px; 
+            padding: 30px; 
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color);
+            border-radius: 12px; 
+            padding: 25px; 
+            display: flex; 
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+        .card:hover { border-color: var(--accent-blue); }
+        
+        .card-title { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .task-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .task-list a {
+            display: block; 
+            padding: 10px 15px; 
+            border-radius: 6px;
+            background: #161b22; 
+            border: 1px solid var(--border-color);
+            color: var(--text-main); 
+            text-decoration: none; 
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .task-list a:hover { 
+            border-color: var(--accent-blue); 
+            color: var(--accent-blue); 
+            background: #000;
+            padding-left: 20px; /* Эффект смещения при наведении */
+        }
+        @media (max-width: 800px) {
+            .grid-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin:0">Select Programming Language</h2>
+        <button class="logout-btn" onclick="localStorage.removeItem('token'); window.location.href='/'">Logout</button>
+    </div>
+
+    <div class="grid-container">
+        <!-- Блок C++ -->
+        <div class="card">
+            <div class="card-title">C++</div>
+            <div class="task-list">
+                <a href="/task.html?lang=cpp&task=Sum%20of%20Matrices">Sum of Matrices</a>
+                <a href="/task.html?lang=cpp&task=Multiply%20Matrices">Multiply Matrices</a>
+                <a href="/task.html?lang=cpp&task=Invert%20Matrices">Invert Matrices</a>
+                <a href="/task.html?lang=cpp&task=Random%20Walk">Random Walk</a>
+                <a href="/task.html?lang=cpp&task=Fractals">Fractals</a>
+            </div>
+        </div>
+
+        <!-- Блок Python -->
+        <div class="card">
+            <div class="card-title">Python</div>
+            <div class="task-list">
+                <a href="/task.html?lang=python&task=Sum%20of%20Matrices">Sum of Matrices</a>
+                <a href="/task.html?lang=python&task=Multiply%20Matrices">Multiply Matrices</a>
+                <a href="/task.html?lang=python&task=Invert%20Matrices">Invert Matrices</a>
+                <a href="/task.html?lang=python&task=Random%20Walk">Random Walk</a>
+                <a href="/task.html?lang=python&task=Fractals">Fractals</a>
+            </div>
+        </div>
+
+        <!-- Блок CUDA -->
+        <div class="card">
+            <div class="card-title">CUDA</div>
+            <div class="task-list">
+                <a href="/task.html?lang=cuda&task=Sum%20of%20Matrices">Sum of Matrices</a>
+                <a href="/task.html?lang=cuda&task=Multiply%20Matrices">Multiply Matrices</a>
+                <a href="/task.html?lang=cuda&task=Invert%20Matrices">Invert Matrices</a>
+                <a href="/task.html?lang=cuda&task=Random%20Walk">Random Walk</a>
+                <a href="/task.html?lang=cuda&task=Fractals">Fractals</a>
+            </div>
+        </div>
+
+        <!-- Блок Go -->
+        <div class="card">
+            <div class="card-title">Go</div>
+            <div class="task-list">
+                <a href="/task.html?lang=go&task=Sum%20of%20Matrices">Sum of Matrices</a>
+                <a href="/task.html?lang=go&task=Multiply%20Matrices">Multiply Matrices</a>
+                <a href="/task.html?lang=go&task=Invert%20Matrices">Invert Matrices</a>
+                <a href="/task.html?lang=go&task=Random%20Walk">Random Walk</a>
+                <a href="/task.html?lang=go&task=Fractals">Fractals</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (!localStorage.getItem('token')) window.location.href = '/index.html';
+    </script>
+</body>
+</html>
