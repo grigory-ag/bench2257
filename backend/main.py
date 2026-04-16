@@ -2,14 +2,16 @@ import os
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException, status, Form
+from pydantic import ValidationError
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
 from jose import jwt, JWTError
 
 from models import Base, User, Submission
 from auth import verify_password, get_password_hash, create_access_token, oauth2_scheme, SECRET_KEY, ALGORITHM
+from schemas import SubmissionCreate, SubmissionResponse, UserCreate
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://bench_user:super_secret_password@db:5432/bench_db")
 engine = create_engine(DATABASE_URL)
@@ -54,6 +56,14 @@ async def register(
     password: Annotated[str, Form(...)], 
     db: DbSession
 ):
+    try:
+        UserCreate(username=username, password=password)
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters",
+        )
+
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         raise HTTPException(
@@ -96,12 +106,76 @@ async def login(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@app.get("/api/analytics/global")
+async def get_global_analytics(db: DbSession):
+    """Public aggregate: average time_ms per task and language (no auth)."""
+    rows = (
+        db.query(
+            Submission.task_name,
+            Submission.language,
+            func.avg(Submission.time_ms).label("avg_time_ms"),
+        )
+        .group_by(Submission.task_name, Submission.language)
+        .all()
+    )
+    return [
+        {
+            "task_name": r.task_name,
+            "language": (r.language or "").lower(),
+            "avg_time_ms": float(r.avg_time_ms) if r.avg_time_ms is not None else 0.0,
+        }
+        for r in rows
+    ]
+
+
 @app.get("/api/downloads/archive")
 async def download_archive():
     file_path = "dummy_archive.zip"
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Archive not found")
     return FileResponse(file_path, media_type="application/zip", filename="env_tools.zip")
+
+
+@app.post("/api/submissions", response_model=SubmissionResponse)
+async def create_submission(
+    payload: SubmissionCreate,
+    current_user: CurrentUser,
+    db: DbSession,
+):
+    max_attempt = db.query(func.max(Submission.attempt_number)).filter(
+        Submission.user_id == current_user.id,
+        Submission.language == payload.language,
+        Submission.task_name == payload.task_name,
+    ).scalar()
+
+    attempt_number = (max_attempt or 0) + 1
+
+    new_submission = Submission(
+        user_id=current_user.id,
+        language=payload.language,
+        task_name=payload.task_name,
+        attempt_number=attempt_number,
+        time_ms=payload.time_ms,
+        cpu_max_ram_mb=payload.cpu_max_ram_mb,
+        gpu_max_ram_mb=payload.gpu_max_ram_mb,
+        cpu_model=payload.cpu_model,
+        gpu_model=payload.gpu_model,
+        archive_path=None,
+    )
+
+    try:
+        db.add(new_submission)
+        db.commit()
+        db.refresh(new_submission)
+    except Exception as e:
+        db.rollback()
+        print(f"Submission error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save submission",
+        )
+
+    return {"status": "success", "id": new_submission.id}
 
 
 @app.get("/api/submissions/{language}/{task_name}")

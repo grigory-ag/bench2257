@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>if(localStorage.getItem("token")) { window.location.replace("dashboard.html"); }</script>
     <meta charset="UTF-8">
     <title>Bench - Login</title>
     <style>
@@ -72,22 +73,36 @@
         document.getElementById('action-btn').innerText = isLogin ? 'Sign in' : 'Sign up';
         document.getElementById('msg').innerText = '';
     }
+    async function errorMessageFromResponse(r) {
+        let fallback = "Something went wrong";
+        try {
+            const errorData = await r.json();
+            if (errorData.detail != null && errorData.detail !== '') {
+                if (typeof errorData.detail === 'string') return errorData.detail;
+                if (Array.isArray(errorData.detail))
+                    return errorData.detail.map(function (e) { return e.msg || ''; }).filter(Boolean).join(' ') || fallback;
+                return String(errorData.detail);
+            }
+        } catch (_) {}
+        return fallback;
+    }
     async function handleAuth() {
         const user = document.getElementById('username').value;
         const pass = document.getElementById('password').value;
         const msg = document.getElementById('msg');
+        msg.style.color = '';
         if (isLogin) {
             const fd = new URLSearchParams(); fd.append('username', user); fd.append('password', pass);
             let r = await fetch('/auth/token', {method:'POST', body:fd});
             if(r.ok){ let d = await r.json(); localStorage.setItem('token', d.access_token); window.location.href='/dashboard.html'; }
-            else msg.innerText = "Something is wrong";
+            else { msg.innerText = await errorMessageFromResponse(r); }
         } else {
             const cp = document.getElementById('confirm_password').value;
             if(pass !== cp){ msg.innerText = "Passwords do not match"; return; }
             const fd = new URLSearchParams(); fd.append('username', user); fd.append('password', pass);
             let r = await fetch('/auth/register', {method:'POST', body:fd});
             if(r.ok){ msg.style.color='#3fb950'; msg.innerText="Success! Sign in now."; switchTab('login'); }
-            else { let e = await r.json(); msg.innerText = e.detail === "Username already registered" ? "Username is busy" : "Something is wrong"; }
+            else { msg.innerText = await errorMessageFromResponse(r); }
         }
     }
 </script>
