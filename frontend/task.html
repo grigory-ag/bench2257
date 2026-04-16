@@ -62,14 +62,15 @@
             if(r.ok) {
                 let data = await r.json();
                 if(data.length > 0) {
-                    let html = `<table><thead><tr><th>Attempt</th><th>Time (ms)</th><th>CPU RAM (MB)</th><th>GPU RAM (MB)</th><th>Hardware</th></tr></thead><tbody>`;
+                    let html = `<table><thead><tr><th>Attempt</th><th>Time (ms)</th><th>CPU</th><th>GPU</th><th>RAM (MB)</th><th>GPU RAM (MB)</th></tr></thead><tbody>`;
                     data.forEach(s => {
                         html += `<tr>
                             <td>#${s.attempt_number}</td>
                             <td class="time-val">${s.time_ms}</td>
-                            <td>${s.cpu_max_ram_mb || '-'}</td>
-                            <td>${s.gpu_max_ram_mb || '-'}</td>
-                            <td style="font-size:12px; color:#848d97">${s.cpu_model || ''} / ${s.gpu_model || ''}</td>
+                            <td style="font-size:12px">${s.cpu_model || '—'}</td>
+                            <td style="font-size:12px">${s.gpu_model || '—'}</td>
+                            <td>${s.cpu_max_ram_mb != null ? s.cpu_max_ram_mb : '—'}</td>
+                            <td>${s.gpu_max_ram_mb != null ? s.gpu_max_ram_mb : '—'}</td>
                         </tr>`;
                     });
                     html += `</tbody></table>`;
