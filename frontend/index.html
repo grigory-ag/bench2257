@@ -1,110 +1,810 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <script>if(localStorage.getItem("token")) { window.location.replace("dashboard.html"); }</script>
     <meta charset="UTF-8">
-    <title>Bench - Login</title>
+    <title>BENCH — Аналитика</title>
     <style>
         :root {
             --bg-color: #000000;
             --card-bg: #0d1117;
-            --text-main: #e6edf3;
-            --text-muted: #848d97;
             --border-color: #30363d;
             --accent-blue: #1f6feb;
             --accent-hover: #388bfd;
-            --danger: #f85149;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; margin: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        .auth-container {
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
             background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-main); background-color: #21262d; }
+        .nav-links a.active { color: var(--accent-blue); background-color: #21262d; }
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
+        main {
+            flex: 1;
+            padding: 24px 30px 48px;
+            max-width: 1320px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 { margin: 0 0 8px; font-size: 26px; font-weight: 700; }
+        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 22px; }
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #c9d1d9;
+            margin: 0 0 14px;
+            letter-spacing: 0.02em;
+        }
+        .panel-card {
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 40px; width: 340px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 20px 22px 22px;
+            margin-bottom: 20px;
         }
-        .logo { text-align: center; font-size: 26px; font-weight: 800; margin-bottom: 30px; letter-spacing: -1px; }
-        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); }
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); transition: 0.3s; font-size: 14px; }
-        .tab.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); font-weight: 600; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); }
-        input {
-            width: 100%; padding: 10px 12px; background-color: #000;
-            border: 1px solid var(--border-color); border-radius: 6px;
-            color: #fff; box-sizing: border-box; outline: none;
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px 20px;
+            align-items: end;
         }
-        input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.2); }
-        button {
-            width: 100%; padding: 12px; background-color: var(--accent-blue);
-            color: #fff; border: none; border-radius: 6px;
-            font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
         }
-        button:hover { background-color: var(--accent-hover); }
-        .msg { margin-top: 15px; font-size: 13px; text-align: center; color: var(--danger); min-height: 18px; }
+        .field select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #010409;
+            color: var(--text-main);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .task-checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin-top: 6px;
+        }
+        .task-checks label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #c9d1d9;
+            cursor: pointer;
+        }
+        .task-checks input { accent-color: var(--accent-blue); width: 16px; height: 16px; }
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 22px 24px;
+            margin-bottom: 20px;
+            min-height: 380px;
+        }
+        .chart-wrap {
+            position: relative;
+            height: min(62vh, 520px);
+            width: 100%;
+        }
+        .err, .loading {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .err { color: #f85149; }
+        .search-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .search-row input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        .search-row input::placeholder {
+            color: #9da7b4;
+            opacity: 1;
+        }
+        .table-scroll {
+            overflow: auto;
+            max-height: min(55vh, 560px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            scrollbar-color: #30363d #0d1117;
+            scrollbar-width: thin;
+        }
+        .table-scroll::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+            background: #0d1117;
+            border-radius: 8px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 8px;
+            border: 2px solid #0d1117;
+        }
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 920px; }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background: #161b22;
+            color: var(--text-muted);
+            font-weight: 600;
+            z-index: 1;
+        }
+        tr:hover td { background: rgba(31, 111, 235, 0.06); }
+        .time-cell { color: #3fb950; font-weight: 700; }
+        .lang-cell { text-transform: uppercase; font-size: 12px; color: #8b949e; }
+        .hidden-row { display: none; }
     </style>
+    <script src="/js/task-translations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="auth-container">
-    <div class="logo">BENCH.</div>
-    <div class="tabs">
-        <div class="tab active" id="tab-login" onclick="switchTab('login')">Sign in</div>
-        <div class="tab" id="tab-register" onclick="switchTab('register')">Sign up</div>
-    </div>
-    <div class="form-group"><label>Username</label><input type="text" id="username"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="password"></div>
-    <div class="form-group" id="confirm-group" style="display: none;"><label>Confirm Password</label><input type="password" id="confirm_password"></div>
-    <button id="action-btn" onclick="handleAuth()">Sign in</button>
-    <div class="msg" id="msg"></div>
-</div>
-<script>
-    let isLogin = true;
-    function switchTab(mode) {
-        isLogin = (mode === 'login');
-        document.getElementById('tab-login').classList.toggle('active', isLogin);
-        document.getElementById('tab-register').classList.toggle('active', !isLogin);
-        document.getElementById('confirm-group').style.display = isLogin ? 'none' : 'block';
-        document.getElementById('action-btn').innerText = isLogin ? 'Sign in' : 'Sign up';
-        document.getElementById('msg').innerText = '';
-    }
-    async function errorMessageFromResponse(r) {
-        let fallback = "Something went wrong";
-        try {
-            const errorData = await r.json();
-            if (errorData.detail != null && errorData.detail !== '') {
-                if (typeof errorData.detail === 'string') return errorData.detail;
-                if (Array.isArray(errorData.detail))
-                    return errorData.detail.map(function (e) { return e.msg || ''; }).filter(Boolean).join(' ') || fallback;
-                return String(errorData.detail);
-            }
-        } catch (_) {}
-        return fallback;
-    }
-    async function handleAuth() {
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-        const msg = document.getElementById('msg');
-        msg.style.color = '';
-        if (isLogin) {
-            const fd = new URLSearchParams(); fd.append('username', user); fd.append('password', pass);
-            let r = await fetch('/auth/token', {method:'POST', body:fd});
-            if(r.ok){ let d = await r.json(); localStorage.setItem('token', d.access_token); window.location.href='/dashboard.html'; }
-            else { msg.innerText = await errorMessageFromResponse(r); }
-        } else {
-            const cp = document.getElementById('confirm_password').value;
-            if(pass !== cp){ msg.innerText = "Passwords do not match"; return; }
-            const fd = new URLSearchParams(); fd.append('username', user); fd.append('password', pass);
-            let r = await fetch('/auth/register', {method:'POST', body:fd});
-            if(r.ok){ msg.style.color='#3fb950'; msg.innerText="Success! Sign in now."; switchTab('login'); }
-            else { msg.innerText = await errorMessageFromResponse(r); }
+    <nav class="navbar">
+        <a href="/index.html" class="nav-brand">BENCH.</a>
+        <div class="nav-links">
+            <a href="/index.html" class="active">Аналитика</a>
+            <a href="/leaderboard.html">Рейтинг</a>
+            <a href="/dashboard.html">Задачи и Теория</a>
+            <a href="/task.html" id="profileLink">Профиль</a>
+            <a href="/admin.html" id="adminLink" style="display:none">Админ-панель</a>
+            <a href="/" class="logout-btn" id="authLink">Выйти</a>
+        </div>
+    </nav>
+    <main>
+        <h1>Конструктор графиков</h1>
+        <p class="subtitle">Интерактивная аналитика по официальным и одобренным замерам (сырые данные с сервера).</p>
+
+        <div class="panel-card">
+            <div class="section-title">Панель управления</div>
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="axisX">Ось X</label>
+                    <select id="axisX">
+                        <option value="language">Язык (категория)</option>
+                        <option value="cpu">Процессор (категория)</option>
+                        <option value="ram">ОЗУ (число, МБ)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="axisY">Ось Y</label>
+                    <select id="axisY" disabled>
+                        <option value="time_ms">Время выполнения (мс)</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top:18px">
+                <div class="section-title" style="margin-bottom:10px">Задачи</div>
+                <div class="task-checks" id="task-checkboxes"></div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="section-title">График</div>
+            <div id="chart-status" class="loading">Загрузка данных…</div>
+            <div class="chart-wrap" id="chart-wrap" style="display:none">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="section-title">Сводная таблица</div>
+            <div class="search-row">
+                <input type="search" id="searchUser" placeholder="Поиск по пользователю…" autocomplete="off">
+                <input type="search" id="searchTask" placeholder="Поиск по задаче…" autocomplete="off">
+                <input type="search" id="searchCpu" placeholder="Поиск по процессору…" autocomplete="off">
+                <input type="search" id="searchGpu" placeholder="Поиск по видеокарте…" autocomplete="off">
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Пользователь</th>
+                            <th>Задача</th>
+                            <th>Язык</th>
+                            <th>Время (мс)</th>
+                            <th>Процессор</th>
+                            <th>Видеокарта</th>
+                            <th>ОЗУ (МБ)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+
+        let rawAnalyticsData = [];
+        let chartInstance = null;
+
+        function handleLogoutClick(event) {
+            event.preventDefault();
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
         }
-    }
-</script>
+
+        function initNavbar() {
+            const profileLink = document.getElementById("profileLink");
+            const authLink = document.getElementById("authLink");
+            const adminLink = document.getElementById("adminLink");
+            if (!token) {
+                profileLink.style.display = "none";
+                authLink.textContent = "Войти / Регистрация";
+                authLink.setAttribute("href", "login.html");
+                authLink.classList.remove("logout-btn");
+                return;
+            }
+            profileLink.style.display = "";
+            authLink.textContent = "Выйти";
+            authLink.setAttribute("href", "index.html");
+            authLink.classList.add("logout-btn");
+            authLink.addEventListener("click", handleLogoutClick);
+            fetch("/auth/me", { headers: { Authorization: "Bearer " + token } })
+                .then((res) => (res.ok ? res.json() : null))
+                .then((user) => {
+                    if (user && user.is_admin === true) {
+                        adminLink.style.display = "block";
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function buildTaskCheckboxes() {
+            const host = document.getElementById("task-checkboxes");
+            host.innerHTML = "";
+            ALL_BENCH_TASKS.forEach(function (task) {
+                const id = "task-" + task.replace(/\s+/g, "-");
+                const lab = document.createElement("label");
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.checked = true;
+                cb.dataset.task = task;
+                cb.id = id;
+                lab.appendChild(cb);
+                const span = document.createElement("span");
+                span.textContent = taskTitle(task);
+                lab.appendChild(span);
+                host.appendChild(lab);
+                cb.addEventListener("change", function () {
+                    renderChart();
+                    renderTable();
+                });
+            });
+        }
+
+        function getSelectedTasks() {
+            const set = new Set();
+            document.querySelectorAll("#task-checkboxes input[type=checkbox]").forEach(function (cb) {
+                if (cb.checked && cb.dataset.task) {
+                    set.add(cb.dataset.task);
+                }
+            });
+            return set;
+        }
+
+        function filterByTasks(rows) {
+            const tasks = getSelectedTasks();
+            if (tasks.size === 0) {
+                return [];
+            }
+            return rows.filter(function (r) {
+                return tasks.has(r.task_name);
+            });
+        }
+
+        function averageTime(subset) {
+            const nums = subset
+                .map(function (r) {
+                    return Number(r.time_ms);
+                })
+                .filter(function (x) {
+                    return Number.isFinite(x);
+                });
+            if (!nums.length) {
+                return null;
+            }
+            return nums.reduce(function (a, b) {
+                return a + b;
+            }, 0) / nums.length;
+        }
+
+        /** Ось X: язык или CPU — столбцы сгруппированы по ЗАДАЧАМ; серии = языки или топ CPU. */
+        function buildGroupedBarByTasks(rows, mode) {
+            const tasks = ALL_BENCH_TASKS.filter(function (t) {
+                return getSelectedTasks().has(t);
+            });
+            const LANG_ORDER = ["python", "cpp", "cuda", "go"];
+            const LANG_LABEL = { python: "Python", cpp: "C++", cuda: "CUDA", go: "Go" };
+            const PALETTE = [
+                "rgba(210, 153, 34, 0.88)",
+                "rgba(88, 166, 255, 0.88)",
+                "rgba(63, 185, 80, 0.88)",
+                "rgba(163, 113, 247, 0.88)",
+                "rgba(248, 81, 73, 0.75)",
+                "rgba(121, 192, 255, 0.88)",
+                "rgba(57, 197, 207, 0.88)",
+                "rgba(255, 166, 87, 0.88)",
+                "rgba(188, 140, 255, 0.85)",
+                "rgba(110, 118, 129, 0.9)",
+            ];
+            const BORDER = [
+                "#d29922",
+                "#58a6ff",
+                "#3fb950",
+                "#a371f7",
+                "#f85149",
+                "#79c0ff",
+                "#39c5cf",
+                "#ffa657",
+                "#bc8cff",
+                "#6e7681",
+            ];
+
+            if (mode === "language") {
+                const langs = LANG_ORDER.filter(function (l) {
+                    return rows.some(function (r) {
+                        return (r.language || "").toLowerCase() === l;
+                    });
+                });
+                return {
+                    labels: tasks.map(taskTitle),
+                    datasets: langs.map(function (lang, idx) {
+                        return {
+                            label: LANG_LABEL[lang] || lang.toUpperCase(),
+                            data: tasks.map(function (task) {
+                                const sub = rows.filter(function (r) {
+                                    return (
+                                        r.task_name === task &&
+                                        (r.language || "").toLowerCase() === lang
+                                    );
+                                });
+                                return averageTime(sub);
+                            }),
+                            backgroundColor: PALETTE[idx % PALETTE.length],
+                            borderColor: BORDER[idx % BORDER.length],
+                            borderWidth: 1,
+                        };
+                    }),
+                };
+            }
+
+            const cpuCounts = new Map();
+            rows.forEach(function (r) {
+                const c = r.cpu_model && String(r.cpu_model).trim() !== "" ? r.cpu_model : "—";
+                cpuCounts.set(c, (cpuCounts.get(c) || 0) + 1);
+            });
+            const cpus = Array.from(cpuCounts.entries())
+                .sort(function (a, b) {
+                    return b[1] - a[1];
+                })
+                .map(function (e) {
+                    return e[0];
+                })
+                .slice(0, 10);
+
+            return {
+                labels: tasks.map(taskTitle),
+                datasets: cpus.map(function (cpu, idx) {
+                    return {
+                        label: cpu.length > 42 ? cpu.slice(0, 40) + "…" : cpu,
+                        fullCpu: cpu,
+                        data: tasks.map(function (task) {
+                            const sub = rows.filter(function (r) {
+                                const c = r.cpu_model && String(r.cpu_model).trim() !== "" ? r.cpu_model : "—";
+                                return r.task_name === task && c === cpu;
+                            });
+                            return averageTime(sub);
+                        }),
+                        backgroundColor: PALETTE[idx % PALETTE.length],
+                        borderColor: BORDER[idx % BORDER.length],
+                        borderWidth: 1,
+                    };
+                }),
+            };
+        }
+
+        function chartCommonOptions(xTitle, yTitle) {
+            const tickStyle = { color: "#c9d1d9" };
+            const gridStyle = { color: "#30363d" };
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: "#e6edf3",
+                            font: { size: 13 },
+                        },
+                    },
+                    tooltip: {
+                        backgroundColor: "#161b22",
+                        titleColor: "#e6edf3",
+                        bodyColor: "#c9d1d9",
+                        borderColor: "#30363d",
+                        borderWidth: 1,
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: tickStyle,
+                        grid: { color: gridStyle.color },
+                        title: {
+                            display: true,
+                            text: xTitle,
+                            color: "#848d97",
+                            font: { size: 12 },
+                        },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: tickStyle,
+                        grid: { color: gridStyle.color },
+                        title: {
+                            display: true,
+                            text: yTitle,
+                            color: "#848d97",
+                            font: { size: 12 },
+                        },
+                    },
+                },
+            };
+        }
+
+        function renderChart() {
+            const status = document.getElementById("chart-status");
+            const wrap = document.getElementById("chart-wrap");
+            const canvas = document.getElementById("analyticsChart");
+            if (!rawAnalyticsData.length) {
+                return;
+            }
+            const rows = filterByTasks(rawAnalyticsData);
+            if (!rows.length) {
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
+                status.style.display = "block";
+                status.className = "err";
+                status.textContent = "Отметьте хотя бы одну задачу в фильтре.";
+                wrap.style.display = "none";
+                return;
+            }
+
+            const axisX = document.getElementById("axisX").value;
+            const ctx = canvas.getContext("2d");
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+
+            status.style.display = "none";
+            wrap.style.display = "block";
+
+            const yTitle = "Время выполнения (мс)";
+
+            if (axisX === "ram") {
+                const points = [];
+                rows.forEach(function (r) {
+                    const x = r.cpu_max_ram_mb;
+                    const y = r.time_ms;
+                    if (x != null && y != null && Number.isFinite(Number(x)) && Number.isFinite(Number(y))) {
+                        points.push({
+                            x: Number(x),
+                            y: Number(y),
+                            _task: r.task_name,
+                            _lang: (r.language || "—").toUpperCase(),
+                            _user: r.username || "—",
+                            _time: Number(y),
+                        });
+                    }
+                });
+                const scatterOpts = chartCommonOptions("ОЗУ (МБ)", yTitle);
+                scatterOpts.plugins = scatterOpts.plugins || {};
+                scatterOpts.plugins.tooltip = Object.assign({}, scatterOpts.plugins.tooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            const p = ctx.raw || {};
+                            const taskRu = taskTitle(p._task);
+                            return [
+                                "Задача: " + taskRu,
+                                "Язык: " + (p._lang || "—"),
+                                "Время: " +
+                                    (p._time != null && Number.isFinite(p._time) ? Math.round(p._time) : "—") +
+                                    " мс",
+                                "Пользователь: " + (p._user || "—"),
+                            ];
+                        },
+                    },
+                });
+                chartInstance = new Chart(ctx, {
+                    type: "scatter",
+                    data: {
+                        datasets: [
+                            {
+                                label: "Замеры",
+                                data: points,
+                                backgroundColor: "rgba(88, 166, 255, 0.55)",
+                                borderColor: "#58a6ff",
+                                borderWidth: 1,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                            },
+                        ],
+                    },
+                    options: Object.assign({}, scatterOpts, {
+                        scales: {
+                            x: {
+                                type: "linear",
+                                position: "bottom",
+                                title: {
+                                    display: true,
+                                    text: "ОЗУ (МБ)",
+                                    color: "#848d97",
+                                    font: { size: 12 },
+                                },
+                                ticks: { color: "#c9d1d9" },
+                                grid: { color: "#30363d" },
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: yTitle,
+                                    color: "#848d97",
+                                    font: { size: 12 },
+                                },
+                                ticks: { color: "#c9d1d9" },
+                                grid: { color: "#30363d" },
+                            },
+                        },
+                    }),
+                });
+                return;
+            }
+
+            const barPack = buildGroupedBarByTasks(rows, axisX === "language" ? "language" : "cpu");
+            if (!barPack.datasets.length) {
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
+                status.style.display = "block";
+                status.className = "err";
+                status.textContent = "Нет данных для выбранных задач и режима оси X.";
+                wrap.style.display = "none";
+                return;
+            }
+            const legendTitle = axisX === "language" ? "Язык" : "Процессор (топ-10 по числу замеров)";
+            const barOpts = chartCommonOptions("Задача", yTitle);
+            barOpts.plugins.legend = Object.assign({}, barOpts.plugins.legend, {
+                position: "top",
+                title: {
+                    display: true,
+                    text: legendTitle,
+                    color: "#8b949e",
+                    font: { size: 11 },
+                },
+            });
+            chartInstance = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: barPack.labels,
+                    datasets: barPack.datasets,
+                },
+                options: Object.assign({}, barOpts, {
+                    interaction: { mode: "index", intersect: false },
+                    scales: {
+                        x: {
+                            ticks: { color: "#c9d1d9", maxRotation: 28, minRotation: 0 },
+                            grid: { color: "#30363d" },
+                            title: {
+                                display: true,
+                                text: "Задача",
+                                color: "#848d97",
+                                font: { size: 12 },
+                            },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: "#c9d1d9" },
+                            grid: { color: "#30363d" },
+                            title: {
+                                display: true,
+                                text: yTitle,
+                                color: "#848d97",
+                                font: { size: 12 },
+                            },
+                        },
+                    },
+                }),
+            });
+        }
+
+        function rowMatchesSearch(row, userQ, taskQ, cpuQ, gpuQ) {
+            function has(hay, q) {
+                if (!q) {
+                    return true;
+                }
+                return String(hay || "")
+                    .toLowerCase()
+                    .includes(q);
+            }
+            function taskMatches(q) {
+                if (!q) {
+                    return true;
+                }
+                const qq = q.toLowerCase();
+                const en = String(row.task_name || "").toLowerCase();
+                const ru = String((typeof taskNamesRU !== "undefined" && taskNamesRU[row.task_name]) || "").toLowerCase();
+                return en.includes(qq) || ru.includes(qq);
+            }
+            return (
+                has(row.username, userQ) &&
+                taskMatches(taskQ) &&
+                has(row.cpu_model, cpuQ) &&
+                has(row.gpu_model, gpuQ)
+            );
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById("data-table-body");
+            const userQ = (document.getElementById("searchUser").value || "").trim().toLowerCase();
+            const taskQ = (document.getElementById("searchTask").value || "").trim().toLowerCase();
+            const cpuQ = (document.getElementById("searchCpu").value || "").trim().toLowerCase();
+            const gpuQ = (document.getElementById("searchGpu").value || "").trim().toLowerCase();
+
+            const base = filterByTasks(rawAnalyticsData);
+            tbody.innerHTML = "";
+            base.forEach(function (r) {
+                if (!rowMatchesSearch(r, userQ, taskQ, cpuQ, gpuQ)) {
+                    return;
+                }
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    "<td>" +
+                    escapeHtml(r.id) +
+                    "</td><td>" +
+                    escapeHtml(r.username || "—") +
+                    "</td><td>" +
+                    escapeHtml(taskTitle(r.task_name)) +
+                    '</td><td class="lang-cell">' +
+                    escapeHtml((r.language || "—").toUpperCase()) +
+                    '</td><td class="time-cell">' +
+                    escapeHtml(r.time_ms != null ? String(Math.round(r.time_ms * 100) / 100) : "—") +
+                    "</td><td>" +
+                    escapeHtml(r.cpu_model || "—") +
+                    "</td><td>" +
+                    escapeHtml(r.gpu_model || "—") +
+                    "</td><td>" +
+                    escapeHtml(r.cpu_max_ram_mb != null ? String(Math.round(r.cpu_max_ram_mb)) : "—") +
+                    "</td>";
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadRaw() {
+            const status = document.getElementById("chart-status");
+            const wrap = document.getElementById("chart-wrap");
+            try {
+                const res = await fetch("/api/analytics/raw");
+                if (!res.ok) {
+                    status.textContent = "Не удалось загрузить данные (" + res.status + ").";
+                    status.className = "err";
+                    return;
+                }
+                rawAnalyticsData = await res.json();
+                if (!Array.isArray(rawAnalyticsData)) {
+                    rawAnalyticsData = [];
+                }
+                if (rawAnalyticsData.length === 0) {
+                    status.textContent = "Пока нет записей для аналитики.";
+                    status.className = "loading";
+                    wrap.style.display = "none";
+                    renderTable();
+                    return;
+                }
+                status.style.display = "none";
+                wrap.style.display = "block";
+                renderChart();
+                renderTable();
+            } catch (e) {
+                status.textContent = "Ошибка сети при загрузке аналитики.";
+                status.className = "err";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initNavbar();
+            buildTaskCheckboxes();
+            document.getElementById("axisX").addEventListener("change", renderChart);
+            ["searchUser", "searchTask", "searchCpu", "searchGpu"].forEach(function (id) {
+                document.getElementById(id).addEventListener("input", renderTable);
+            });
+            loadRaw();
+        });
+    </script>
 </body>
 </html>

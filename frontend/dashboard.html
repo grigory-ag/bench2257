@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Bench - Dashboard</title>
+    <title>BENCH — Задачи и Теория</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -16,157 +16,231 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 30px; background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        .nav-brand { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; color: #fff; }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
         .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .nav-links a {
-            color: var(--text-muted); text-decoration: none; padding: 8px 14px;
-            border-radius: 6px; font-size: 14px; transition: 0.2s;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
         }
         .nav-links a:hover { color: var(--text-main); background-color: #21262d; }
         .nav-links a.active { color: var(--accent-blue); background-color: #21262d; }
         .logout-btn {
-            background: none; border: 1px solid var(--border-color);
-            color: var(--text-main); padding: 8px 14px; border-radius: 6px; cursor: pointer;
-            transition: 0.2s; font-size: 14px; font-family: inherit;
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
         }
         .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
         .page-title-row {
-            max-width: 1200px; margin: 0 auto; padding: 24px 30px 0;
-            width: 100%; box-sizing: border-box;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 30px 8px;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .page-title-row h2 { margin: 0; font-size: 22px; font-weight: 600; }
-        
+        .page-title-row h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .page-title-row p {
+            margin: 10px 0 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
         .grid-container {
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* 2 колонки */
-            gap: 25px; 
-            padding: 30px; 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            padding: 24px 30px 40px;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
         }
-        .card {
-            background-color: var(--card-bg); 
+        .task-card {
+            display: block;
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px; 
-            padding: 25px; 
-            display: flex; 
-            flex-direction: column;
-            transition: transform 0.2s;
+            border-radius: 14px;
+            padding: 22px 22px 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
         }
-        .card:hover { border-color: var(--accent-blue); }
-        
-        .card-title { 
-            font-size: 32px; 
-            font-weight: 800; 
-            margin-bottom: 20px; 
+        .task-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), #388bfd55);
+            opacity: 0.85;
+        }
+        .task-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        }
+        .task-card h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            font-weight: 700;
             color: #fff;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
+            line-height: 1.3;
         }
-        .task-list { 
-            list-style: none; 
-            padding: 0; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
+        .task-card span {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.45;
         }
-        .task-list a {
-            display: block; 
-            padding: 10px 15px; 
-            border-radius: 6px;
-            background: #161b22; 
-            border: 1px solid var(--border-color);
-            color: var(--text-main); 
-            text-decoration: none; 
-            transition: 0.2s;
-            font-size: 14px;
-        }
-        .task-list a:hover { 
-            border-color: var(--accent-blue); 
-            color: var(--accent-blue); 
-            background: #000;
-            padding-left: 20px; /* Эффект смещения при наведении */
-        }
-        @media (max-width: 800px) {
-            .grid-container { grid-template-columns: 1fr; }
+        .task-card .go {
+            margin-top: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-blue);
         }
     </style>
+    <script src="/js/task-translations.js"></script>
 </head>
 <body>
     <nav class="navbar">
-        <span class="nav-brand">BENCH.</span>
+        <a href="/index.html" class="nav-brand">BENCH.</a>
         <div class="nav-links">
-            <a href="/dashboard.html" class="active">Dashboard</a>
-            <a href="/analytics.html">Global Analytics</a>
-            <button type="button" class="logout-btn" onclick="localStorage.removeItem('token'); window.location.href='/'">Logout</button>
+            <a href="/index.html">Аналитика</a>
+            <a href="/leaderboard.html">Рейтинг</a>
+            <a href="/dashboard.html" class="active">Задачи и Теория</a>
+            <a href="/task.html" id="profileLink">Профиль</a>
+            <a href="/admin.html" id="adminLink" style="display:none">Админ-панель</a>
+            <a href="/" class="logout-btn" id="authLink">Выйти</a>
         </div>
     </nav>
     <div class="page-title-row">
-        <h2>Select Programming Language</h2>
+        <h2>Доступные задачи</h2>
+        <p>Выберите задачу: краткая теория, скачивание утилиты бенчмарка и отправка результатов.</p>
     </div>
 
     <div class="grid-container">
-        <!-- Блок C++ -->
-        <div class="card">
-            <div class="card-title">C++</div>
-            <div class="task-list">
-                <a href="/task.html?lang=cpp&task=Sum%20of%20Matrices">Sum of Matrices</a>
-                <a href="/task.html?lang=cpp&task=Multiply%20Matrices">Multiply Matrices</a>
-                <a href="/task.html?lang=cpp&task=Invert%20Matrices">Invert Matrices</a>
-                <a href="/task.html?lang=cpp&task=Random%20Walk">Random Walk</a>
-                <a href="/task.html?lang=cpp&task=Fractals">Fractals</a>
-            </div>
-        </div>
-
-        <!-- Блок Python -->
-        <div class="card">
-            <div class="card-title">Python</div>
-            <div class="task-list">
-                <a href="/task.html?lang=python&task=Sum%20of%20Matrices">Sum of Matrices</a>
-                <a href="/task.html?lang=python&task=Multiply%20Matrices">Multiply Matrices</a>
-                <a href="/task.html?lang=python&task=Invert%20Matrices">Invert Matrices</a>
-                <a href="/task.html?lang=python&task=Random%20Walk">Random Walk</a>
-                <a href="/task.html?lang=python&task=Fractals">Fractals</a>
-            </div>
-        </div>
-
-        <!-- Блок CUDA -->
-        <div class="card">
-            <div class="card-title">CUDA</div>
-            <div class="task-list">
-                <a href="/task.html?lang=cuda&task=Sum%20of%20Matrices">Sum of Matrices</a>
-                <a href="/task.html?lang=cuda&task=Multiply%20Matrices">Multiply Matrices</a>
-                <a href="/task.html?lang=cuda&task=Invert%20Matrices">Invert Matrices</a>
-                <a href="/task.html?lang=cuda&task=Random%20Walk">Random Walk</a>
-                <a href="/task.html?lang=cuda&task=Fractals">Fractals</a>
-            </div>
-        </div>
-
-        <!-- Блок Go -->
-        <div class="card">
-            <div class="card-title">Go</div>
-            <div class="task-list">
-                <a href="/task.html?lang=go&task=Sum%20of%20Matrices">Sum of Matrices</a>
-                <a href="/task.html?lang=go&task=Multiply%20Matrices">Multiply Matrices</a>
-                <a href="/task.html?lang=go&task=Invert%20Matrices">Invert Matrices</a>
-                <a href="/task.html?lang=go&task=Random%20Walk">Random Walk</a>
-                <a href="/task.html?lang=go&task=Fractals">Fractals</a>
-            </div>
-        </div>
+        <a class="task-card" data-bench-task="Sum of Matrices" href="/theory.html?task=Sum%20of%20Matrices">
+            <h3 class="task-card-heading"></h3>
+            <span>Сложение больших вещественных матриц из файлов с контролем ввода-вывода.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Multiply Matrices" href="/theory.html?task=Multiply%20Matrices">
+            <h3 class="task-card-heading"></h3>
+            <span>Плотное умножение больших матриц в лимитах времени и памяти.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Invert Matrices" href="/theory.html?task=Invert%20Matrices">
+            <h3 class="task-card-heading"></h3>
+            <span>Численная линейная алгебра для больших порядков.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Random Walk" href="/theory.html?task=Random%20Walk">
+            <h3 class="task-card-heading"></h3>
+            <span>Стохастика и статистики на длинных траекториях.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Fractals" href="/theory.html?task=Fractals">
+            <h3 class="task-card-heading"></h3>
+            <span>Итерированные отображения и высокое разрешение.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Zombie Apocalypse" href="/theory.html?task=Zombie%20Apocalypse">
+            <h3 class="task-card-heading"></h3>
+            <span>Клеточный автомат на сетке с двумя популяциями.</span>
+            <div class="go">К теории →</div>
+        </a>
+        <a class="task-card" data-bench-task="Pandemic Spread" href="/theory.html?task=Pandemic%20Spread">
+            <h3 class="task-card-heading"></h3>
+            <span>Эпидемия на сети или решётке, стохастические обновления.</span>
+            <div class="go">К теории →</div>
+        </a>
     </div>
 
     <script>
-        if (!localStorage.getItem('token')) window.location.href = '/index.html';
+        const token = localStorage.getItem("token");
+        function handleLogoutClick(event) {
+            event.preventDefault();
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+
+        function initNavbar() {
+            const profileLink = document.getElementById("profileLink");
+            const authLink = document.getElementById("authLink");
+            const adminLink = document.getElementById("adminLink");
+            if (!token) {
+                profileLink.style.display = "none";
+                authLink.textContent = "Войти / Регистрация";
+                authLink.setAttribute("href", "login.html");
+                authLink.classList.remove("logout-btn");
+                return;
+            }
+            profileLink.style.display = "";
+            authLink.textContent = "Выйти";
+            authLink.classList.add("logout-btn");
+            authLink.setAttribute("href", "index.html");
+            authLink.addEventListener("click", handleLogoutClick);
+            fetch("/auth/me", { headers: { Authorization: "Bearer " + token } })
+                .then((res) => (res.ok ? res.json() : null))
+                .then((user) => {
+                    if (user && user.is_admin === true) {
+                        adminLink.style.display = "block";
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function fillTaskCardTitles() {
+            document.querySelectorAll("a.task-card[data-bench-task]").forEach(function (card) {
+                var key = card.getAttribute("data-bench-task");
+                var el = card.querySelector(".task-card-heading");
+                if (el && key) {
+                    el.textContent = taskTitle(key);
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initNavbar();
+            fillTaskCardTitles();
+        });
     </script>
 </body>
 </html>

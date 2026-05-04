@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>BENCH — Админ-панель</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --accent-blue: #1f6feb;
+            --accent-hover: #388bfd;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .nav-links a:hover {
+            color: var(--text-main);
+            background-color: #21262d;
+        }
+        .nav-links a.active {
+            color: var(--accent-blue);
+            background-color: #21262d;
+        }
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .logout-btn:hover {
+            background-color: #21262d;
+            border-color: var(--text-muted);
+        }
+        main {
+            flex: 1;
+            padding: 28px 30px 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            overflow: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: top;
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 20px;
+            font-size: 15px;
+        }
+        .view-btn {
+            border: none;
+            background: var(--accent-blue);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .view-btn:hover {
+            background: var(--accent-hover);
+        }
+        .approve-btn {
+            border: none;
+            background: #238636;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: 8px;
+        }
+        .approve-btn:hover { background: #2ea043; }
+        .reject-btn {
+            border: none;
+            background: #da3633;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: 8px;
+        }
+        .reject-btn:hover { background: #f85149; }
+        .action-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .status-tag {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 6px;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.72);
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            background: #0b1118;
+            border: 1px solid #2f3640;
+            border-radius: 12px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #2f3640;
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .close-btn {
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .close-btn:hover {
+            background: #1d2530;
+        }
+        .code-wrap {
+            overflow: auto;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+            background: #070b10;
+        }
+        pre {
+            margin: 0;
+            padding: 16px;
+            color: #c9d1d9;
+            font-size: 13px;
+            line-height: 1.45;
+            white-space: pre;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/index.html" class="nav-brand">BENCH.</a>
+        <div class="nav-links">
+            <a href="/index.html">Аналитика</a>
+            <a href="/leaderboard.html">Рейтинг</a>
+            <a href="/dashboard.html">Задачи и Теория</a>
+            <a href="/task.html">Профиль</a>
+            <a href="/admin.html" id="adminLink" class="active" style="display:none">Админ-панель</a>
+            <a href="/index.html" class="logout-btn" id="authLink">Выйти</a>
+        </div>
+    </nav>
+
+    <main>
+        <h1>Админ-панель: кастомные отправки</h1>
+        <p class="subtitle">Отправки с пользовательским исходным кодом (на модерации).</p>
+        <div class="table-card">
+            <div id="table-host" class="empty">Загрузка отправок…</div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="code-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Исходный код отправки</h2>
+                <button class="close-btn" id="close-modal-btn" type="button">Закрыть</button>
+            </div>
+            <div class="code-wrap">
+                <pre><code id="modal-code"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/task-translations.js"></script>
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "login.html";
+        }
+        const adminLink = document.getElementById("adminLink");
+
+        const tableHost = document.getElementById("table-host");
+        const modal = document.getElementById("code-modal");
+        const modalCode = document.getElementById("modal-code");
+        const modalTitle = document.getElementById("modal-title");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+
+        function closeModal() {
+            modal.style.display = "none";
+            modalCode.textContent = "";
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function renderTable(rows) {
+            const pendingRows = (Array.isArray(rows) ? rows : []).filter(function (row) {
+                return row && row.status === "pending";
+            });
+
+            if (pendingRows.length === 0) {
+                tableHost.className = "empty";
+                tableHost.textContent = "Нет отправок на модерации.";
+                return;
+            }
+
+            let html = "<table><thead><tr>";
+            html += "<th>ID</th><th>Пользователь</th><th>Задача</th><th>Язык</th><th>Время (мс)</th><th>Действия</th>";
+            html += "</tr></thead><tbody>";
+
+            pendingRows.forEach(function (row, idx) {
+                html += "<tr>";
+                html += "<td>" + escapeHtml(row.id ?? "—") + "</td>";
+                html += "<td>" + escapeHtml(row.username ?? "—") + "</td>";
+                html += "<td>" + escapeHtml(taskTitle(row.task_name)) + "</td>";
+                html += "<td>" + escapeHtml((row.language ?? "—").toUpperCase()) + "</td>";
+                html += "<td>" + escapeHtml(row.time_ms ?? "—") + "</td>";
+                html += '<td><div class="action-row">';
+                html += '<button class="view-btn" data-action="view" data-idx="' + idx + '">Код</button>';
+                html += '<button class="approve-btn" data-action="approve" data-idx="' + idx + '">Одобрить</button>';
+                html += '<button class="reject-btn" data-action="reject" data-idx="' + idx + '">Отклонить</button>';
+                html += "</div>";
+                html += '<div class="status-tag" id="status-' + row.id + '">Статус: ' + escapeHtml(row.status) + "</div></td>";
+                html += "</tr>";
+            });
+
+            html += "</tbody></table>";
+            tableHost.className = "";
+            tableHost.innerHTML = html;
+
+            const buttons = tableHost.querySelectorAll("button[data-action]");
+            buttons.forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    const idx = Number(btn.getAttribute("data-idx"));
+                    const row = pendingRows[idx];
+                    const action = btn.getAttribute("data-action");
+                    if (action === "view") {
+                        modalTitle.textContent =
+                            "Отправка #" + row.id + " — " + (row.username || "неизвестно") + " — " + taskTitle(row.task_name);
+                        modalCode.textContent = row.source_code || "";
+                        modal.style.display = "flex";
+                        return;
+                    }
+                    if (action === "approve") {
+                        updateStatus(row, "approved");
+                        return;
+                    }
+                    if (action === "reject") {
+                        updateStatus(row, "rejected");
+                    }
+                });
+            });
+        }
+
+        async function updateStatus(row, nextStatus) {
+            try {
+                const res = await fetch("/api/admin/submissions/" + row.id + "/status", {
+                    method: "PATCH",
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ status: nextStatus }),
+                });
+                if (!res.ok) {
+                    alert("Не удалось обновить статус (" + res.status + ").");
+                    return;
+                }
+                await init();
+            } catch (error) {
+                alert("Ошибка сети при обновлении статуса.");
+            }
+        }
+
+        closeModalBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.style.display === "flex") {
+                closeModal();
+            }
+        });
+
+        async function initPage() {
+            try {
+                const me = await fetch("/auth/me", {
+                    headers: { Authorization: "Bearer " + token },
+                });
+                if (!me.ok) {
+                    tableHost.className = "empty";
+                    tableHost.textContent = "Не удалось проверить пользователя.";
+                    return;
+                }
+                const meData = await me.json();
+                if (meData && meData.is_admin === true) {
+                    adminLink.style.display = "block";
+                } else {
+                    tableHost.className = "empty";
+                    tableHost.textContent = "Нужны права администратора.";
+                    return;
+                }
+
+                const res = await fetch("/api/admin/submissions", {
+                    headers: {
+                        Authorization: "Bearer " + token,
+                    },
+                });
+                if (!res.ok) {
+                    tableHost.className = "empty";
+                    tableHost.textContent = "Не удалось загрузить отправки (" + res.status + ").";
+                    return;
+                }
+                const data = await res.json();
+                renderTable(data);
+            } catch (error) {
+                tableHost.className = "empty";
+                tableHost.textContent = "Ошибка сети при загрузке отправок.";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const authLink = document.getElementById("authLink");
+            if (authLink) {
+                authLink.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    localStorage.removeItem("token");
+                    window.location.href = "index.html";
+                });
+            }
+            initPage();
+        });
+    </script>
+</body>
+</html>

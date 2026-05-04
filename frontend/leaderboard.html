@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>BENCH — Рейтинг</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --accent-blue: #1f6feb;
+            --accent-hover: #388bfd;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-main); background-color: #21262d; }
+        .nav-links a.active { color: var(--accent-blue); background-color: #21262d; }
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
+        main {
+            padding: 28px 30px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 { margin: 0 0 10px; font-size: 28px; font-weight: 800; letter-spacing: -0.4px; }
+        .subtitle { color: var(--text-muted); font-size: 15px; line-height: 1.5; margin-bottom: 22px; max-width: 52em; }
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            overflow: auto;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        th { color: var(--text-muted); font-weight: 600; }
+        .rank { font-weight: 700; color: #79c0ff; width: 56px; }
+        .time { color: #3fb950; font-weight: 700; white-space: nowrap; }
+        .lang-cell { text-transform: uppercase; font-size: 12px; color: #c9d1d9; }
+        .empty {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 44px 20px;
+            font-size: 15px;
+        }
+        .view-code-btn {
+            border: none;
+            background: var(--accent-blue);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .view-code-btn:hover { background: var(--accent-hover); }
+        .view-code-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.72);
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-overlay.is-open { display: flex; }
+        .modal {
+            width: min(980px, 100%);
+            max-height: 90vh;
+            background: #0b1118;
+            border: 1px solid #2f3640;
+            border-radius: 12px;
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #2f3640;
+            flex-shrink: 0;
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .close-btn {
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .close-btn:hover { background: #1d2530; }
+        .code-wrap {
+            overflow: auto;
+            flex: 1;
+            min-height: 0;
+            background: #070b10;
+        }
+        .code-wrap pre {
+            margin: 0;
+            padding: 18px 20px;
+            color: #c9d1d9;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+    <script src="/js/task-translations.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/index.html" class="nav-brand">BENCH.</a>
+        <div class="nav-links">
+            <a href="/index.html">Аналитика</a>
+            <a href="/leaderboard.html" class="active">Рейтинг</a>
+            <a href="/dashboard.html">Задачи и Теория</a>
+            <a href="/task.html" id="profileLink">Профиль</a>
+            <a href="/admin.html" id="adminLink" style="display:none">Админ-панель</a>
+            <a href="/" class="logout-btn" id="authLink">Выйти</a>
+        </div>
+    </nav>
+    <main>
+        <h1>Топ лучших пользовательских решений</h1>
+        <p class="subtitle">
+            Одобренные отправки с исходным кодом, отсортированные по заявленному времени выполнения. Нажмите «Посмотреть код», чтобы открыть алгоритм участника.
+        </p>
+        <div class="table-card">
+            <div id="leaderboard-content" class="empty">Загрузка рейтинга…</div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="code-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Исходный код</h2>
+                <button class="close-btn" id="close-modal-btn" type="button">Закрыть</button>
+            </div>
+            <div class="code-wrap">
+                <pre><code id="modal-code"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+        let leaderboardRows = [];
+
+        function handleLogoutClick(event) {
+            event.preventDefault();
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function initNavbar() {
+            const profileLink = document.getElementById("profileLink");
+            const authLink = document.getElementById("authLink");
+            const adminLink = document.getElementById("adminLink");
+            if (!token) {
+                profileLink.style.display = "none";
+                authLink.textContent = "Войти / Регистрация";
+                authLink.setAttribute("href", "login.html");
+                authLink.classList.remove("logout-btn");
+                return;
+            }
+            profileLink.style.display = "";
+            authLink.textContent = "Выйти";
+            authLink.classList.add("logout-btn");
+            authLink.setAttribute("href", "index.html");
+            authLink.addEventListener("click", handleLogoutClick);
+            fetch("/auth/me", { headers: { Authorization: "Bearer " + token } })
+                .then(function (res) {
+                    return res.ok ? res.json() : null;
+                })
+                .then(function (user) {
+                    if (user && user.is_admin === true) {
+                        adminLink.style.display = "block";
+                    }
+                })
+                .catch(function () {});
+        }
+
+        function closeCodeModal() {
+            var overlay = document.getElementById("code-modal");
+            overlay.classList.remove("is-open");
+            overlay.setAttribute("aria-hidden", "true");
+            document.getElementById("modal-code").textContent = "";
+        }
+
+        function openCodeModal(idx) {
+            var row = leaderboardRows[idx];
+            if (!row) return;
+            var code = row.source_code;
+            var overlay = document.getElementById("code-modal");
+            var title = document.getElementById("modal-title");
+            var codeEl = document.getElementById("modal-code");
+            title.textContent =
+                "Код: " +
+                (row.username || "—") +
+                " — " +
+                taskTitle(row.task_name) +
+                " (" +
+                String(row.language || "").toUpperCase() +
+                ")";
+            codeEl.textContent = code != null && code !== "" ? code : "Код не передан.";
+            overlay.classList.add("is-open");
+            overlay.setAttribute("aria-hidden", "false");
+        }
+
+        function wireModal() {
+            document.getElementById("close-modal-btn").addEventListener("click", closeCodeModal);
+            document.getElementById("code-modal").addEventListener("click", function (e) {
+                if (e.target.id === "code-modal") {
+                    closeCodeModal();
+                }
+            });
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape" && document.getElementById("code-modal").classList.contains("is-open")) {
+                    closeCodeModal();
+                }
+            });
+        }
+
+        async function loadLeaderboard() {
+            var host = document.getElementById("leaderboard-content");
+            try {
+                var res = await fetch("/api/leaderboard");
+                if (!res.ok) {
+                    host.textContent = "Не удалось загрузить рейтинг (" + res.status + ").";
+                    return;
+                }
+                var rows = await res.json();
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    host.textContent = "Пока нет одобренных кастомных решений.";
+                    return;
+                }
+                leaderboardRows = rows;
+
+                var html = "<table><thead><tr>";
+                html +=
+                    "<th>Место</th><th>Пользователь</th><th>Задача</th><th>Язык</th><th>Заявленное время (мс)</th><th>Алгоритм</th>";
+                html += "</tr></thead><tbody>";
+                rows.forEach(function (row, idx) {
+                    var hasCode = row.source_code != null && String(row.source_code).length > 0;
+                    html += "<tr>";
+                    html += '<td class="rank">' + (idx + 1) + "</td>";
+                    html += "<td>" + escapeHtml(row.username || "—") + "</td>";
+                    html += "<td>" + escapeHtml(taskTitle(row.task_name)) + "</td>";
+                    html += '<td class="lang-cell">' + escapeHtml((row.language || "—").toUpperCase()) + "</td>";
+                    html += '<td class="time">' + escapeHtml(String(row.time_ms != null ? row.time_ms : "—")) + "</td>";
+                    html += "<td>";
+                    html +=
+                        '<button type="button" class="view-code-btn" data-idx="' +
+                        idx +
+                        '"' +
+                        (hasCode ? "" : " disabled") +
+                        ">Посмотреть код</button>";
+                    html += "</td>";
+                    html += "</tr>";
+                });
+                html += "</tbody></table>";
+                host.className = "";
+                host.innerHTML = html;
+
+                host.querySelectorAll(".view-code-btn").forEach(function (btn) {
+                    btn.addEventListener("click", function () {
+                        var i = Number(btn.getAttribute("data-idx"));
+                        if (!btn.disabled) openCodeModal(i);
+                    });
+                });
+            } catch (err) {
+                host.textContent = "Ошибка сети при загрузке рейтинга.";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initNavbar();
+            wireModal();
+            loadLeaderboard();
+        });
+    </script>
+</body>
+</html>

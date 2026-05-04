@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -8,6 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    is_admin = Column(Boolean, default=False)
 
 class Submission(Base):
     __tablename__ = "submissions"
@@ -23,4 +24,11 @@ class Submission(Base):
     cpu_model = Column(String)                 
     gpu_model = Column(String)                 
     
-    archive_path = Column(String)              
+    archive_path = Column(String)
+    source_code = Column(Text, nullable=True)
+    status = Column(String, default="pending")
+
+# Паспорт задачи (будущее расширение БД): для каждой task_name хранить
+# краткое описание, подробное ТЗ, технические требования и автора эталона (например, "Core Team").
+# Пример ORM: TaskSpec(task_key PK, summary, spec_md, technical_md, reference_author).
+# Пока эти поля задаются на фронтенде (theory.html, объект TASK_PASSPORT).

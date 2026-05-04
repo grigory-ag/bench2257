@@ -15,7 +15,8 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend:/app 
+      - ./backend:/app
+      - ./benchmark_client:/app/benchmark_client
 
   frontend:
     build: ./frontend

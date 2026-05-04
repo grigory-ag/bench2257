@@ -7,7 +7,7 @@ import tempfile
 import time
 import threading
 from pathlib import Path
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
 import psutil
@@ -22,10 +22,25 @@ API_BASE = "http://localhost:3000"
 
 LANGUAGES = ["CPP", "Python", "CUDA", "Go"]
 
-TASKS = ["Sum of Matrices", "Multiply Matrices", "Invert Matrices", "Random Walk", "Fractals"]
+TASKS = [
+    "Sum of Matrices",
+    "Multiply Matrices",
+    "Invert Matrices",
+    "Random Walk",
+    "Fractals",
+    "Zombie Apocalypse",
+    "Pandemic Spread",
+]
 
-SCRIPTS_DIR = Path(__file__).parent / "scripts"
-BENCHMARK_CLIENT_ROOT = Path(__file__).resolve().parent
+def _resolve_client_root() -> Path:
+    """Рядом с .exe (PyInstaller) или рядом с app.py при запуске из исходников."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+BENCHMARK_CLIENT_ROOT = _resolve_client_root()
+SCRIPTS_DIR = BENCHMARK_CLIENT_ROOT / "scripts"
 
 EXT_MAP: dict[str, str] = {
     "CPP":    ".cpp",
@@ -34,12 +49,27 @@ EXT_MAP: dict[str, str] = {
     "Go":     ".go",
 }
 
+# Directory names under scripts/ (lowercase); LANG keys are uppercase in the UI.
+SCRIPT_SUBDIR: dict[str, str] = {
+    "CPP": "cpp",
+    "Python": "python",
+    "CUDA": "cuda",
+    "Go": "go",
+}
+
 COMPILER_CHECK_CMDS: dict[str, list[list[str]]] = {
     "CPP":    [["g++", "--version"]],
     "Python": [["python", "--version"], ["python3", "--version"]],
     "CUDA":   [["nvcc", "--version"]],
     "Go":     [["go", "version"]],
 }
+
+
+def _subprocess_no_window_kwargs() -> dict:
+    """Скрыть консоль на Windows при subprocess.run (GUI / PyInstaller)."""
+    if os.name != "nt":
+        return {}
+    return {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)}
 
 
 def _extract_execution_time_ms(stdout: str | None) -> float | None:
@@ -91,9 +121,9 @@ def _time_ms_from_run(stdout: str | None, wall_ms: float) -> float:
 def get_cpu_model() -> str:
     try:
         info = cpuinfo.get_cpu_info()
-        return info.get("brand_raw", "Unknown CPU")
+        return info.get("brand_raw", "Неизвестный процессор")
     except Exception:
-        return "Unknown CPU"
+        return "Неизвестный процессор"
 
 
 def get_total_ram_mb() -> float:
@@ -108,16 +138,17 @@ def get_gpu_name() -> str:
                 capture_output=True,
                 text=True,
                 timeout=20,
+                **_subprocess_no_window_kwargs(),
             )
             if r.returncode != 0:
-                return "Unknown"
+                return "Неизвестно"
             output = r.stdout or ""
             lines = [
                 line.strip()
                 for line in output.splitlines()
                 if line.strip() and line.strip() != "Name"
             ]
-            return lines[0] if lines else "Unknown"
+            return lines[0] if lines else "Неизвестно"
 
         if sys.platform == "darwin":
             r = subprocess.run(
@@ -125,22 +156,24 @@ def get_gpu_name() -> str:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                **_subprocess_no_window_kwargs(),
             )
             if r.returncode != 0:
-                return "Unknown"
+                return "Неизвестно"
             for line in r.stdout.splitlines():
                 s = line.strip()
                 if "Chipset Model:" in s:
                     return s.split("Chipset Model:", 1)[-1].strip()
                 if s.startswith("Model:") and ":" in s:
                     return s.split(":", 1)[-1].strip()
-            return "Unknown"
+            return "Неизвестно"
 
         r = subprocess.run(
             ["sh", "-c", "lspci | grep -i vga"],
             capture_output=True,
             text=True,
             timeout=15,
+            **_subprocess_no_window_kwargs(),
         )
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip().split("\n")[0].strip()
@@ -150,23 +183,30 @@ def get_gpu_name() -> str:
             capture_output=True,
             text=True,
             timeout=30,
+            **_subprocess_no_window_kwargs(),
         )
         if r2.returncode != 0:
-            return "Unknown"
+            return "Неизвестно"
         for line in r2.stdout.splitlines():
             line = line.strip()
             if line.startswith("product:"):
                 return line.split(":", 1)[1].strip()
-        return "Unknown"
+        return "Неизвестно"
     except Exception:
-        return "Unknown"
+        return "Неизвестно"
 
 
 def find_python_cmd() -> str | None:
     """Return the first working Python executable name, or None."""
     for cmd in ("python", "python3"):
         try:
-            r = subprocess.run([cmd, "--version"], capture_output=True, text=True, timeout=5)
+            r = subprocess.run(
+                [cmd, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                **_subprocess_no_window_kwargs(),
+            )
             if r.returncode == 0:
                 return cmd
         except FileNotFoundError:
@@ -183,23 +223,23 @@ class LoginWindow(ctk.CTk):
         super().__init__()
         self.token: str | None = None
 
-        self.title("Benchmark Client — Login")
+        self.title("Утилита Бенчмаркинга")
         self.geometry("360x280")
         self.resizable(False, False)
 
-        ctk.CTkLabel(self, text="Benchmark Client", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=(28, 4))
-        ctk.CTkLabel(self, text="Sign in to your account", text_color="gray").pack(pady=(0, 20))
+        ctk.CTkLabel(self, text="Утилита Бенчмаркинга", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=(28, 4))
+        ctk.CTkLabel(self, text="Вход в аккаунт", text_color="gray").pack(pady=(0, 20))
 
-        self._username_entry = ctk.CTkEntry(self, placeholder_text="Username", width=260)
+        self._username_entry = ctk.CTkEntry(self, placeholder_text="Имя пользователя", width=260)
         self._username_entry.pack(pady=6)
 
-        self._password_entry = ctk.CTkEntry(self, placeholder_text="Password", show="●", width=260)
+        self._password_entry = ctk.CTkEntry(self, placeholder_text="Пароль", show="●", width=260)
         self._password_entry.pack(pady=6)
 
         self._status_label = ctk.CTkLabel(self, text="", text_color="#e05c5c")
         self._status_label.pack(pady=(4, 0))
 
-        self._login_btn = ctk.CTkButton(self, text="Login", width=260, command=self._on_login)
+        self._login_btn = ctk.CTkButton(self, text="Войти", width=260, command=self._on_login)
         self._login_btn.pack(pady=(10, 0))
 
         self.bind("<Return>", lambda _: self._on_login())
@@ -211,10 +251,10 @@ class LoginWindow(ctk.CTk):
         password = self._password_entry.get()
 
         if not username or not password:
-            self._status_label.configure(text="Please fill in all fields.")
+            self._status_label.configure(text="Заполните все поля.")
             return
 
-        self._login_btn.configure(state="disabled", text="Connecting…")
+        self._login_btn.configure(state="disabled", text="Подключение…")
         self._status_label.configure(text="")
         self.update()
 
@@ -225,27 +265,35 @@ class LoginWindow(ctk.CTk):
                 timeout=8,
             )
         except requests.exceptions.ConnectionError:
-            self._show_error("Cannot reach the server.\nMake sure Docker Compose is running.")
+            self._show_error("Не удаётся связаться с сервером.\nУбедитесь, что Docker Compose запущен.")
             return
         except requests.exceptions.Timeout:
-            self._show_error("Request timed out.")
+            self._show_error("Превышено время ожидания ответа.")
             return
         except requests.exceptions.RequestException as exc:
-            self._show_error(f"Network error:\n{exc}")
+            self._show_error(f"Ошибка сети:\n{exc}")
             return
         finally:
-            self._login_btn.configure(state="normal", text="Login")
+            self._login_btn.configure(state="normal", text="Войти")
 
         if resp.status_code == 200:
             self.token = resp.json().get("access_token")
             self.destroy()
         else:
-            detail = resp.json().get("detail", "Authentication failed.")
-            self._show_error(detail)
+            detail = resp.json().get("detail", "Ошибка авторизации.")
+            if isinstance(detail, list):
+                parts = []
+                for x in detail:
+                    if isinstance(x, dict):
+                        parts.append(str(x.get("msg", x.get("type", x))))
+                    else:
+                        parts.append(str(x))
+                detail = " ".join(parts) or "Ошибка авторизации."
+            self._show_error(str(detail))
 
     def _show_error(self, message: str) -> None:
         self._status_label.configure(text=message)
-        self._login_btn.configure(state="normal", text="Login")
+        self._login_btn.configure(state="normal", text="Войти")
 
 
 # ─────────────────────────────────────────────
@@ -291,7 +339,7 @@ class TaskCard(ctk.CTkFrame):
         ).pack(side="right")
 
         # Status label
-        self._status_label = ctk.CTkLabel(self, text="Ready", text_color="gray", font=ctk.CTkFont(size=12))
+        self._status_label = ctk.CTkLabel(self, text="Готово", text_color="gray", font=ctk.CTkFont(size=12))
         self._status_label.pack(anchor="w", padx=14, pady=(0, 10))
 
         # Buttons
@@ -300,7 +348,7 @@ class TaskCard(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_frame,
-            text="Check Dependencies",
+            text="Проверить зависимости",
             width=160,
             fg_color="#2b2b2b",
             hover_color="#3a3a3a",
@@ -309,13 +357,24 @@ class TaskCard(ctk.CTkFrame):
 
         self._run_btn = ctk.CTkButton(
             btn_frame,
-            text="Run & Submit",
+            text="Запустить тест",
             width=130,
             fg_color="#1f538d",
             hover_color="#14375e",
             command=self._run_and_submit,
         )
         self._run_btn.pack(side="left")
+
+        self._custom_btn = ctk.CTkButton(
+            btn_frame,
+            text="Предложить эталонный код",
+            width=170,
+            fg_color="#d97706",
+            hover_color="#b45309",
+            text_color="#111827",
+            command=self._submit_custom_code,
+        )
+        self._custom_btn.pack(side="left", padx=(8, 0))
 
     # ------------------------------------------------------------------
 
@@ -325,12 +384,18 @@ class TaskCard(ctk.CTkFrame):
 
         for cmd in candidates:
             try:
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    **_subprocess_no_window_kwargs(),
+                )
                 version_text = (result.stdout.strip() or result.stderr.strip())
                 if result.returncode == 0 or version_text:
                     messagebox.showinfo(
-                        title=f"Compiler Found — {lang}",
-                        message=f"Compiler found:\n{version_text}",
+                        title=f"Компилятор найден — {lang}",
+                        message=f"Компилятор обнаружен:\n{version_text}",
                     )
                     return
             except FileNotFoundError:
@@ -338,15 +403,73 @@ class TaskCard(ctk.CTkFrame):
             except Exception:
                 continue
 
+        missing_help = {
+            "CPP": (
+                "Компилятор g++ не найден.\n\n"
+                "Windows: установите MSYS2 (MinGW-w64).\n"
+                "Linux: sudo apt install g++\n"
+                "macOS: xcode-select --install"
+            ),
+            "Python": (
+                "Интерпретатор Python не найден.\n\n"
+                "Скачайте с python.org и при установке отметьте «Add to PATH»."
+            ),
+            "CUDA": (
+                "Компилятор NVCC не найден.\n\n"
+                "Нужна видеокарта NVIDIA и установленный CUDA Toolkit."
+            ),
+            "Go": "Компилятор Go не найден.\n\nИнструкция: go.dev/doc/install",
+        }
         messagebox.showerror(
-            title=f"Compiler Not Found — {lang}",
-            message=f"Compiler not found! Please install the required toolchain for {lang}.",
+            title=f"Компилятор не найден — {lang}",
+            message=missing_help.get(lang, f"Компилятор для {lang} не найден."),
         )
 
     def _run_and_submit(self) -> None:
         self._run_btn.configure(state="disabled")
-        self._status_label.configure(text="Running…", text_color="#f0a500")
-        threading.Thread(target=self._worker, daemon=True).start()
+        self._custom_btn.configure(state="disabled")
+        self._status_label.configure(text="Выполняется…", text_color="#f0a500")
+        threading.Thread(target=self._worker, args=(None, None), daemon=True).start()
+
+    def _submit_custom_code(self) -> None:
+        askopenfilename = getattr(getattr(ctk, "filedialog", None), "askopenfilename", filedialog.askopenfilename)
+        file_path = askopenfilename(
+            title="Выберите файл с исходным кодом",
+            filetypes=[
+                ("Исходные файлы", "*.cpp *.py *.cu *.go"),
+                ("C++", "*.cpp"),
+                ("Python", "*.py"),
+                ("CUDA", "*.cu"),
+                ("Go", "*.go"),
+                ("Все файлы", "*.*"),
+            ],
+        )
+        if not file_path:
+            return
+
+        file_size = os.path.getsize(file_path)
+        if file_size > 50 * 1024:
+            messagebox.showerror(
+                "Файл слишком большой",
+                "Размер файла превышает лимит. Для пользовательского кода допускается не более 50 КБ.",
+            )
+            return
+
+        try:
+            code_text = Path(file_path).read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            self._set_status("Неверная кодировка текста", "#e05c5c")
+            messagebox.showerror("Ошибка чтения", "Не удалось прочитать файл как текст UTF-8.")
+            return
+        except OSError as exc:
+            self._set_status("Ошибка чтения файла", "#e05c5c")
+            messagebox.showerror("Ошибка чтения", f"Не удалось прочитать выбранный файл:\n{exc}")
+            return
+
+        self._run_btn.configure(state="disabled")
+        self._custom_btn.configure(state="disabled")
+        self._status_label.configure(text="Выполняется пользовательский код…", text_color="#f0a500")
+        threading.Thread(target=self._worker, args=(Path(file_path), code_text), daemon=True).start()
 
     # ------------------------------------------------------------------
 
@@ -358,7 +481,7 @@ class TaskCard(ctk.CTkFrame):
         if lang == "Python":
             python_cmd = find_python_cmd()
             if python_cmd is None:
-                raise RuntimeError("Python interpreter not found. Please install Python 3.")
+                raise RuntimeError("Интерпретатор Python не найден. Установите Python 3.")
             start = time.perf_counter()
             result = subprocess.run(
                 [python_cmd, str(script_path)],
@@ -366,11 +489,12 @@ class TaskCard(ctk.CTkFrame):
                 capture_output=True,
                 text=True,
                 timeout=300,
+                **_subprocess_no_window_kwargs(),
             )
             wall_ms = (time.perf_counter() - start) * 1000
             if result.returncode != 0:
                 err_text = (result.stderr or "").strip()
-                raise RuntimeError(err_text or f"Script exited with code {result.returncode}")
+                raise RuntimeError(err_text or f"Программа завершилась с кодом {result.returncode}")
             return _time_ms_from_run(result.stdout, wall_ms)
 
         if lang in ("CPP", "CUDA"):
@@ -379,14 +503,32 @@ class TaskCard(ctk.CTkFrame):
             fd, exe_path = tempfile.mkstemp(suffix=exe_suffix)
             os.close(fd)
             try:
+                compile_cmd = [compiler, str(script_path), "-O2", "-o", exe_path]
+                if lang == "CPP":
+                    # OpenMP (e.g. Fractals and other parallel CPU tasks).
+                    compile_cmd.insert(-2, "-fopenmp")
+                if lang == "CUDA":
+                    # Pascal+ (sm_60): device atomicAdd(double*) for Random Walk etc.
+                    compile_cmd.insert(2, "-arch=sm_60")
+                    compile_cmd.insert(2, "-std=c++14")  # nvcc + host STL (e.g. std::vector)
+                    compile_cmd.insert(-2, "-lcurand")
                 compile_result = subprocess.run(
-                    [compiler, str(script_path), "-O2", "-o", exe_path],
+                    compile_cmd,
                     capture_output=True,
                     text=True,
                     timeout=120,
+                    **_subprocess_no_window_kwargs(),
                 )
                 if compile_result.returncode != 0:
-                    raise RuntimeError(f"Compilation failed:\n{compile_result.stderr}")
+                    stderr_text = compile_result.stderr or ""
+                    stdout_text = compile_result.stdout or ""
+                    raise RuntimeError(
+                        "Ошибка компиляции:\n"
+                        "STDERR:\n"
+                        f"{stderr_text}\n"
+                        "STDOUT:\n"
+                        f"{stdout_text}"
+                    )
                 start = time.perf_counter()
                 run_result = subprocess.run(
                     [exe_path],
@@ -394,11 +536,12 @@ class TaskCard(ctk.CTkFrame):
                     capture_output=True,
                     text=True,
                     timeout=300,
+                    **_subprocess_no_window_kwargs(),
                 )
                 wall_ms = (time.perf_counter() - start) * 1000
                 if run_result.returncode != 0:
                     err_text = (run_result.stderr or "").strip()
-                    raise RuntimeError(err_text or f"Script exited with code {run_result.returncode}")
+                    raise RuntimeError(err_text or f"Программа завершилась с кодом {run_result.returncode}")
                 return _time_ms_from_run(run_result.stdout, wall_ms)
             finally:
                 try:
@@ -416,9 +559,18 @@ class TaskCard(ctk.CTkFrame):
                     capture_output=True,
                     text=True,
                     timeout=120,
+                    **_subprocess_no_window_kwargs(),
                 )
                 if compile_result.returncode != 0:
-                    raise RuntimeError(f"Compilation failed:\n{compile_result.stderr}")
+                    stderr_text = compile_result.stderr or ""
+                    stdout_text = compile_result.stdout or ""
+                    raise RuntimeError(
+                        "Ошибка компиляции:\n"
+                        "STDERR:\n"
+                        f"{stderr_text}\n"
+                        "STDOUT:\n"
+                        f"{stdout_text}"
+                    )
                 start = time.perf_counter()
                 run_result = subprocess.run(
                     [exe_path],
@@ -426,11 +578,12 @@ class TaskCard(ctk.CTkFrame):
                     capture_output=True,
                     text=True,
                     timeout=300,
+                    **_subprocess_no_window_kwargs(),
                 )
                 wall_ms = (time.perf_counter() - start) * 1000
                 if run_result.returncode != 0:
                     err_text = (run_result.stderr or "").strip()
-                    raise RuntimeError(err_text or f"Script exited with code {run_result.returncode}")
+                    raise RuntimeError(err_text or f"Программа завершилась с кодом {run_result.returncode}")
                 return _time_ms_from_run(run_result.stdout, wall_ms)
             finally:
                 try:
@@ -438,18 +591,24 @@ class TaskCard(ctk.CTkFrame):
                 except OSError:
                     pass
 
-        raise ValueError(f"Unknown language: {lang}")
+        raise ValueError(f"Неизвестный язык: {lang}")
 
-    def _worker(self) -> None:
+    def _worker(self, custom_script_path: Path | None = None, code_text: str | None = None) -> None:
         try:
             lang = self._language
-            ext = EXT_MAP.get(lang, "")
-            script_path = SCRIPTS_DIR / lang / f"{self._task_name}{ext}"
-
-            if not script_path.exists():
-                self._set_status("File not found", "#e05c5c")
-                messagebox.showerror("File Not Found", f"File not found: {script_path}")
-                return
+            if custom_script_path is None:
+                ext = EXT_MAP.get(lang, "")
+                script_path = SCRIPTS_DIR / SCRIPT_SUBDIR[lang] / f"{self._task_name}{ext}"
+                if not script_path.exists():
+                    self._set_status("Файл не найден", "#e05c5c")
+                    messagebox.showerror("Файл не найден", f"Файл не найден:\n{script_path}")
+                    return
+            else:
+                script_path = custom_script_path
+                if not script_path.exists():
+                    self._set_status("Файл не найден", "#e05c5c")
+                    messagebox.showerror("Файл не найден", f"Файл не найден:\n{script_path}")
+                    return
 
             time_ms = self._run_script(lang, script_path)
 
@@ -461,6 +620,7 @@ class TaskCard(ctk.CTkFrame):
                 "gpu_max_ram_mb": 0.0,
                 "cpu_model": self._cpu_model,
                 "gpu_model": self._gpu_model,
+                "source_code": code_text,
             }
 
             resp = requests.post(
@@ -472,38 +632,47 @@ class TaskCard(ctk.CTkFrame):
 
             if resp.status_code == 200:
                 data = resp.json()
-                self._set_status(f"Done — {time_ms} ms", "#4caf50")
+                self._set_status(f"Готово — {time_ms} мс", "#4caf50")
                 messagebox.showinfo(
-                    title="Submission Successful",
+                    title="Успех",
                     message=(
-                        f"Task:        {self._task_name}\n"
-                        f"Language:    {lang}\n"
-                        f"Time:        {time_ms} ms\n"
-                        f"CPU:         {self._cpu_model}\n"
-                        f"RAM total:   {self._total_ram_mb:.0f} MB\n\n"
-                        f"Saved with ID: {data.get('id')}"
+                        f"Задача:              {self._task_name}\n"
+                        f"Язык:                {lang}\n"
+                        f"Время выполнения:    {time_ms} мс\n"
+                        f"Процессор:           {self._cpu_model}\n"
+                        f"ОЗУ (всего):         {self._total_ram_mb:.0f} МБ\n\n"
+                        f"Сохранено, ID:       {data.get('id')}"
                     ),
                 )
             else:
                 detail = resp.json().get("detail", resp.text)
-                self._set_status("Submit failed", "#e05c5c")
-                messagebox.showerror("Submission Error", f"Server returned {resp.status_code}:\n{detail}")
+                self._set_status("Ошибка отправки", "#e05c5c")
+                messagebox.showerror(
+                    "Ошибка отправки",
+                    f"Сервер вернул код {resp.status_code}:\n{detail}",
+                )
 
         except RuntimeError as exc:
-            self._set_status("Run failed", "#e05c5c")
-            messagebox.showerror("Execution Error", str(exc))
+            msg = str(exc)
+            err_title = "Ошибка компиляции" if msg.startswith("Ошибка компиляции") else "Ошибка выполнения"
+            self._set_status("Ошибка выполнения", "#e05c5c")
+            messagebox.showerror(err_title, msg)
             return
         except requests.exceptions.ConnectionError:
-            self._set_status("Connection error", "#e05c5c")
-            messagebox.showerror("Connection Error", "Cannot reach the server.\nMake sure Docker Compose is running.")
+            self._set_status("Ошибка соединения", "#e05c5c")
+            messagebox.showerror(
+                "Ошибка соединения",
+                "Не удаётся связаться с сервером.\nУбедитесь, что Docker Compose запущен.",
+            )
         except requests.exceptions.Timeout:
-            self._set_status("Timeout", "#e05c5c")
-            messagebox.showerror("Timeout", "The request timed out.")
+            self._set_status("Таймаут", "#e05c5c")
+            messagebox.showerror("Таймаут", "Превышено время ожидания ответа сервера.")
         except requests.exceptions.RequestException as exc:
-            self._set_status("Network error", "#e05c5c")
-            messagebox.showerror("Network Error", str(exc))
+            self._set_status("Ошибка сети", "#e05c5c")
+            messagebox.showerror("Ошибка сети", str(exc))
         finally:
             self.after(0, lambda: self._run_btn.configure(state="normal"))
+            self.after(0, lambda: self._custom_btn.configure(state="normal"))
 
     def _set_status(self, text: str, color: str) -> None:
         self.after(0, lambda: self._status_label.configure(text=text, text_color=color))
@@ -523,7 +692,7 @@ class MainWindow(ctk.CTk):
         self._total_ram_mb = get_total_ram_mb()
         self._gpu_model = get_gpu_name()
 
-        self.title("Benchmark Client")
+        self.title("Утилита Бенчмаркинга")
         self.geometry("860x560")
         self.minsize(700, 460)
 
@@ -542,13 +711,13 @@ class MainWindow(ctk.CTk):
 
         ctk.CTkLabel(
             self._sidebar,
-            text="Benchmark\nClient",
+            text="Утилита\nбенчмаркинга",
             font=ctk.CTkFont(size=17, weight="bold"),
         ).pack(pady=(24, 4))
 
         ctk.CTkLabel(
             self._sidebar,
-            text="Select Language",
+            text="Выберите язык:",
             font=ctk.CTkFont(size=11),
             text_color="gray",
         ).pack(pady=(12, 6))
@@ -570,7 +739,7 @@ class MainWindow(ctk.CTk):
         ctk.CTkFrame(self._sidebar, fg_color="transparent").pack(expand=True)
         ctk.CTkLabel(
             self._sidebar,
-            text=f"CPU:\n{self._cpu_model[:28]}",
+            text=f"Процессор:\n{self._cpu_model[:28]}",
             font=ctk.CTkFont(size=10),
             text_color="#666",
             wraplength=160,
@@ -601,7 +770,7 @@ class MainWindow(ctk.CTk):
         for lang, btn in self._lang_buttons.items():
             btn.configure(fg_color="#1f538d" if lang == language else "transparent")
 
-        self._header_label.configure(text=f"{language} — Tasks")
+        self._header_label.configure(text=f"{language} — Задачи")
 
         for widget in self._cards_frame.winfo_children():
             widget.destroy()
@@ -639,4 +808,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import multiprocessing
+
+    multiprocessing.freeze_support()
     main()

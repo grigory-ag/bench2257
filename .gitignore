@@ -1,57 +1,76 @@
+# === Секреты и окружение ===
 .env
-*.secrets
-utility_history.json
+.env.*
+!.env.example
 
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
 venv/
 env/
 .venv/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 pip-log.txt
 pip-delete-this-directory.txt
-dist/
-build/
-*.spec
 
-*.o
-*.obj
+.eggs/
+*.egg
+*.egg-info/
+
+# PyInstaller / локальная сборка клиента (spec в корне репозитория)
+/*.spec
 *.exe
-*.out
-*.app
-*.so
-*.dll
-*.dylib
-*.a
-*.lib
-cmake-build-debug/
-cmake-build-release/
-CMakeFiles/
-CMakeCache.txt
 
+# Каталоги сборки (в т.ч. benchmark_client/build, benchmark_client/dist)
+build/
+dist/
+
+# === Кэш и тесты ===
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+.tox/
+.nox/
+
+# === Артефакты запуска бенчмарков (локально) ===
 *.dat
 *.ppm
 *.bin
-result.json
-config.txt
-*.csv
-*.png
+history.csv
+M1.dat
+M2.dat
+M3.dat
+T.dat
 
-pgdata/
-postgres_data/
+# === Backend: загрузки и zip из Dockerfile ===
+uploads/
+dummy_archive.zip
 
-backend/uploads/
-!backend/uploads/.gitkeep
+# === Базы данных (локальные) ===
+*.sqlite3
+*.db
+pgdata_dev/
 
-*.zip
-*.tar.gz
+# === Логи ===
+*.log
+logs/
 
-.DS_Store
-Thumbs.db
-desktop.ini
-
+# === IDE и инструменты ===
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
+*.swp
+*~
+.cursor/
+
+# === ОС ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

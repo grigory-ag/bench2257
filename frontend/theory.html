@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>BENCH — Паспорт задачи</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --accent-blue: #1f6feb;
+            --accent-hover: #388bfd;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-main); background-color: #21262d; }
+        .nav-links a.active { color: var(--accent-blue); background-color: #21262d; }
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
+
+        .task-hub {
+            flex: 1;
+            padding: 36px clamp(20px, 4vw, 48px) 56px;
+            max-width: min(1320px, 100%);
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .hub-empty {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .hub-title {
+            margin: 0 0 16px;
+            font-size: clamp(32px, 4.5vw, 46px);
+            font-weight: 800;
+            letter-spacing: -0.7px;
+            line-height: 1.12;
+        }
+        .hub-lead {
+            color: var(--text-muted);
+            font-size: 17px;
+            line-height: 1.55;
+            margin: 0 0 32px;
+            max-width: 52em;
+        }
+        .unknown-task {
+            color: #f85149;
+            margin: 0 0 20px;
+            font-size: 14px;
+        }
+        .hub-section {
+            margin-bottom: 36px;
+        }
+        .hub-section:last-child {
+            margin-bottom: 0;
+        }
+        .hub-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px clamp(22px, 3vw, 40px) 36px;
+        }
+        .hub-panel--article {
+            padding-top: 36px;
+            padding-bottom: 40px;
+        }
+        .hub-section-title {
+            margin: 0 0 22px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .hub-theory .hub-prose {
+            font-size: 18px;
+            line-height: 1.82;
+            color: #c9d1d9;
+        }
+        .hub-theory .hub-prose p { margin: 0 0 1.25em; }
+        .hub-theory .hub-prose p:last-child { margin-bottom: 0; }
+        .hub-subhead {
+            margin: 2em 0 0.65em;
+            font-size: 13px;
+            font-weight: 700;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .hub-subhead:first-of-type { margin-top: 0; }
+
+        .code-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .code-tab {
+            background: #161b22;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
+        }
+        .code-tab:hover {
+            color: var(--text-main);
+            border-color: #484f58;
+        }
+        .code-tab.active {
+            color: #fff;
+            background: #21262d;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px rgba(31, 111, 235, 0.35);
+        }
+        .code-pane {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: #010409;
+            overflow: hidden;
+        }
+        .code-scroll {
+            margin: 0;
+            padding: 20px 22px;
+            max-height: min(70vh, 640px);
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        .code-scroll code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            color: #c9d1d9;
+            white-space: pre;
+            display: block;
+            min-width: 100%;
+        }
+        .code-author {
+            margin: 14px 0 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .btn-copy {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .btn-copy:hover {
+            background: #30363d;
+            border-color: #484f58;
+        }
+        .code-load-err {
+            margin-top: 12px;
+            color: #f85149;
+            font-size: 13px;
+        }
+        .code-placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .hub-toolbar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 16px 20px;
+            width: 100%;
+            margin: 0 0 8px;
+        }
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: var(--accent-blue);
+            color: #fff !important;
+            padding: 20px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 17px;
+            transition: background 0.2s;
+            border: none;
+            min-width: min(100%, 280px);
+        }
+        .btn-download:hover { background: var(--accent-hover); }
+        .btn-profile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: transparent;
+            color: var(--accent-blue);
+            padding: 16px 26px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            transition: 0.2s;
+            min-width: min(100%, 260px);
+        }
+        .btn-profile:hover {
+            border-color: var(--accent-blue);
+            background: rgba(31, 111, 235, 0.08);
+        }
+    </style>
+    <script src="/js/task-translations.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/index.html" class="nav-brand">BENCH.</a>
+        <div class="nav-links">
+            <a href="/index.html">Аналитика</a>
+            <a href="/leaderboard.html">Рейтинг</a>
+            <a href="/dashboard.html" class="active">Задачи и Теория</a>
+            <a href="/task.html" id="profileLink">Профиль</a>
+            <a href="/admin.html" id="adminLink" style="display:none">Админ-панель</a>
+            <a href="/" class="logout-btn" id="authLink">Выйти</a>
+        </div>
+    </nav>
+
+    <main class="task-hub">
+        <div id="hub-empty" class="hub-empty">
+            Задача не выбрана. Откройте страницу из раздела «Задачи и Теория» или укажите в URL параметр <code>?task=…</code>
+            (например, <code>?task=Sum%20of%20Matrices</code>).
+        </div>
+
+        <div id="hub-content" style="display: none">
+            <h1 class="hub-title" id="hub-title"></h1>
+            <p class="hub-lead" id="hub-lead">Паспорт задачи: теория, техническое задание и эталонные реализации.</p>
+            <p id="hub-warn" class="unknown-task" style="display: none"></p>
+
+            <section class="hub-section hub-panel hub-theory hub-panel--article" aria-labelledby="theory-heading">
+                <h2 class="hub-section-title" id="theory-heading">Теория и ТЗ</h2>
+                <div class="hub-prose" id="hub-theory-body"></div>
+            </section>
+
+            <section class="hub-section hub-toolbar-wrap" aria-label="Инструментарий">
+                <div class="hub-toolbar">
+                    <a id="download-zip" class="btn-download" href="/api/downloads/archive">Скачать утилиту бенчмарка (.zip)</a>
+                    <a id="hub-profile-link" class="btn-profile" href="/task.html">Посмотреть мои результаты по этой задаче</a>
+                </div>
+            </section>
+
+            <section class="hub-section hub-panel hub-code" aria-labelledby="code-heading">
+                <h2 class="hub-section-title" id="code-heading">Эталонные решения</h2>
+                <div class="code-tabs" role="tablist" id="code-tabs">
+                    <button type="button" class="code-tab active" data-lang="python" role="tab" aria-selected="true">Python</button>
+                    <button type="button" class="code-tab" data-lang="cpp" role="tab" aria-selected="false">C++</button>
+                    <button type="button" class="code-tab" data-lang="cuda" role="tab" aria-selected="false">CUDA</button>
+                    <button type="button" class="code-tab" data-lang="go" role="tab" aria-selected="false">Go</button>
+                </div>
+                <div class="code-pane">
+                    <pre class="code-scroll"><code id="code-viewer" class="code-placeholder">Загрузка кода…</code></pre>
+                </div>
+                <p class="code-author">Автор эталонного решения: Core Team</p>
+                <button type="button" class="btn-copy" id="btn-copy-code">Копировать код</button>
+                <p class="code-load-err" id="code-load-err" style="display: none"></p>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+
+        /** Общее правило вывода для замера (дополняет техтребования каждой задачи). */
+        const TECH_JSON_METERING =
+            "Технические требования (замер): на стандартный вывод выведите строго один JSON-объект с полем execution_time_ms (число, время выполнения в миллисекундах). В измеряемом участке не допускаются операции ввода-вывода (чтение/запись файлов, сеть, интерактивный ввод); подготовку данных и момент старта/стопа таймера согласуйте с утилитой бенчмарка.";
+
+        const taskDescriptions = {
+            "Sum of Matrices": {
+                summary:
+                    "Напишите программу, которая читает две большие вещественные матрицы из файлов M1.dat и M2.dat, складывает их и сохраняет результат в M3.dat.",
+                spec:
+                    "Вход: два бинарных файла матриц в формате утилиты бенчмарка (размерность и порядок элементов совпадают с эталоном). Выход: M3.dat с поэлементной суммой A+B. Корректность проверяется относительно эталонного решения; время измеряется на полном тестовом наборе.",
+                technicalRequirements:
+                    "Язык и компилятор — по правилам пакета. Не используйте сторонние библиотеки линейной алгебры, если клиент этого не разрешает. Пиковое потребление ОЗУ не должно превышать лимит сценария; решение должно укладываться в отведённое время.",
+            },
+            "Multiply Matrices": {
+                summary:
+                    "Реализуйте плотное умножение матриц: чтение A и B, вычисление C = A × B и запись результата с требуемой точностью.",
+                spec:
+                    "Размерности согласованы (число столбцов A равно числу строк B). Формат хранения и порядок обхода — как в спецификации бенчмарка. Допустима только численная погрешность в пределах проверки.",
+                technicalRequirements:
+                    "Оптимизация под кэш и векторизация приветствуются. Для CUDA учитывайте лимиты GPU-памяти. Запуск только через официальный клиент; метрики времени и памяти собираются автоматически.",
+            },
+            "Invert Matrices": {
+                summary:
+                    "Вычислите обратную матрицу (или эквивалент по спецификации теста) для большой квадратной матрицы из набора данных.",
+                spec:
+                    "На вход подаётся квадратная матрица; на выход — матрица, удовлетворяющая критериям проверки (норма невязки, обусловленность). Поведение на вырожденных или плохо обусловленных случаях задаётся сценарием теста.",
+                technicalRequirements:
+                    "Устойчивость к численным ошибкам; запрет на подгрузку готового ответа из посторонних файлов. Строгое соответствие формату ввода-вывода клиента.",
+            },
+            "Random Walk": {
+                summary:
+                    "Смоделируйте случайное блуждание на решётке или графе на большое число шагов и соберите статистики, требуемые бенчмарком.",
+                spec:
+                    "Генератор случайных чисел и сид фиксируются конфигурацией теста. Нужно воспроизвести распределения и агрегаты (дисперсия смещения, доля посещённых узлов и т.д.) в допусках к эталону.",
+                technicalRequirements:
+                    "Детерминизм относительно сида; при многопоточности — отсутствие гонок, если параллелизм разрешён. Лимиты по числу шагов и времени — см. конфиг сценария в архиве бенчмарка.",
+            },
+            "Fractals": {
+                summary:
+                    "Постройте заданный фрактал или итеративную визуализацию в требуемом разрешении; вывод в формате пакета бенчмарка.",
+                spec:
+                    "Параметры области, число итераций и палитра задаются тестом. Результат сравнивается с эталоном (бит-в-бит или по метрике, указанной в клиенте).",
+                technicalRequirements:
+                    "Оптимизация по времени без выхода за пределы допуска по корректности. Учитывайте разрешение и глубину итераций; для CUDA — размер тайлов и лимиты регистров.",
+            },
+            "Zombie Apocalypse": {
+                summary:
+                    "Клеточный автомат на сетке с популяциями людей и зомби; параметр вероятности p и агрегаты по шагам симуляции.",
+                spec:
+                    "Начальные условия и правила переходов задаются входными файлами. На выходе — метрики (число выживших, пик заражения и др.) в формате, ожидаемом проверкой.",
+                technicalRequirements:
+                    "Устойчивость при больших Nx, Ny; корректная обработка границ сетки (тор, стена — по сценарию). Параллелизм только если он сохраняет согласованность с эталоном.",
+            },
+            "Pandemic Spread": {
+                summary:
+                    "Модель эпидемии на сети или решётке со стохастическими или детерминированными шагами; кривые заражения по сценариям.",
+                spec:
+                    "Граф или решётка и параметры (например, β/γ) задаются конфигом. Выход: временные ряды и итоговые показатели для сравнения с эталоном; для стохастики сид фиксирован.",
+                technicalRequirements:
+                    "Сложность одного шага должна масштабироваться с размером модели; ограничения по ОЗУ для состояний узлов/ячеек. Выходные данные строго в формате клиента.",
+            },
+        };
+
+        function handleLogoutClick(event) {
+            event.preventDefault();
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+
+        function initNavbar() {
+            const profileLink = document.getElementById("profileLink");
+            const authLink = document.getElementById("authLink");
+            const adminLink = document.getElementById("adminLink");
+            if (!token) {
+                profileLink.style.display = "none";
+                authLink.textContent = "Войти / Регистрация";
+                authLink.setAttribute("href", "login.html");
+                authLink.classList.remove("logout-btn");
+                return;
+            }
+            profileLink.style.display = "";
+            authLink.textContent = "Выйти";
+            authLink.classList.add("logout-btn");
+            authLink.setAttribute("href", "index.html");
+            authLink.addEventListener("click", handleLogoutClick);
+            fetch("/auth/me", { headers: { Authorization: "Bearer " + token } })
+                .then((res) => (res.ok ? res.json() : null))
+                .then((user) => {
+                    if (user && user.is_admin === true) {
+                        adminLink.style.display = "block";
+                    }
+                })
+                .catch(function () {});
+        }
+
+        function renderTheoryBody(host, desc) {
+            host.textContent = "";
+            function addP(text) {
+                const p = document.createElement("p");
+                p.textContent = text;
+                host.appendChild(p);
+            }
+            function addSub(title) {
+                const h = document.createElement("div");
+                h.className = "hub-subhead";
+                h.textContent = title;
+                host.appendChild(h);
+            }
+            addP(desc.summary);
+            addSub("Подробное техническое задание");
+            addP(desc.spec);
+            addSub("Технические требования");
+            addP(desc.technicalRequirements + "\n\n" + TECH_JSON_METERING);
+        }
+
+        function setActiveTab(lang) {
+            document.querySelectorAll(".code-tab").forEach(function (btn) {
+                const on = btn.getAttribute("data-lang") === lang;
+                btn.classList.toggle("active", on);
+                btn.setAttribute("aria-selected", on ? "true" : "false");
+            });
+        }
+
+        function initPage() {
+            const params = new URLSearchParams(window.location.search);
+            const raw = params.get("task");
+            const taskName = raw ? raw.trim() : "";
+
+            const hubEmpty = document.getElementById("hub-empty");
+            const hubContent = document.getElementById("hub-content");
+            const titleEl = document.getElementById("hub-title");
+            const warn = document.getElementById("hub-warn");
+            const theoryBody = document.getElementById("hub-theory-body");
+            const profileLink = document.getElementById("hub-profile-link");
+            const codeViewer = document.getElementById("code-viewer");
+            const errEl = document.getElementById("code-load-err");
+
+            if (!taskName) {
+                hubEmpty.style.display = "block";
+                hubContent.style.display = "none";
+                return;
+            }
+
+            hubEmpty.style.display = "none";
+            hubContent.style.display = "block";
+
+            titleEl.textContent = taskTitle(taskName);
+            const q = encodeURIComponent(taskName);
+            profileLink.href = "/task.html?task=" + q;
+
+            warn.style.display = "none";
+            warn.textContent = "";
+
+            const desc = taskDescriptions[taskName];
+            if (desc) {
+                renderTheoryBody(theoryBody, desc);
+            } else {
+                theoryBody.textContent = "";
+                const p = document.createElement("p");
+                p.textContent =
+                    "Для этой задачи пока нет текстового паспорта в справочнике. Используйте утилиту бенчмарка и раздел профиля для отправок.";
+                theoryBody.appendChild(p);
+                warn.style.display = "block";
+                warn.textContent =
+                    "Нет записи в taskDescriptions для «" + taskName + "» — добавьте описание на фронтенде.";
+            }
+
+            let codeCache = { python: null, cpp: null, cuda: null, go: null };
+            let currentLang = "python";
+
+            function showCodeForLang(lang) {
+                currentLang = lang;
+                const text = codeCache[lang];
+                codeViewer.classList.remove("code-placeholder");
+                if (text == null || text === "") {
+                    codeViewer.textContent =
+                        text === null
+                            ? "// Эталонный файл для этого языка не найден в пакете бенчмарка."
+                            : "";
+                } else {
+                    codeViewer.textContent = text;
+                }
+            }
+
+            document.querySelectorAll(".code-tab").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    const lang = btn.getAttribute("data-lang");
+                    if (!lang) return;
+                    setActiveTab(lang);
+                    showCodeForLang(lang);
+                });
+            });
+
+            codeViewer.textContent = "Загрузка кода…";
+            codeViewer.classList.add("code-placeholder");
+            errEl.style.display = "none";
+            errEl.textContent = "";
+
+            fetch("/api/tasks/" + encodeURIComponent(taskName) + "/code")
+                .then(function (res) {
+                    if (!res.ok) {
+                        return res.json().then(
+                            function (j) {
+                                var d = j && j.detail;
+                                var msg =
+                                    typeof d === "string"
+                                        ? d
+                                        : Array.isArray(d)
+                                          ? d
+                                                .map(function (x) {
+                                                    return x.msg || String(x);
+                                                })
+                                                .join(" ")
+                                          : d != null
+                                            ? String(d)
+                                            : "";
+                                throw new Error(msg || "Ошибка загрузки кода (" + res.status + ")");
+                            },
+                            function () {
+                                throw new Error("Ошибка загрузки кода (" + res.status + ")");
+                            }
+                        );
+                    }
+                    return res.json();
+                })
+                .then(function (data) {
+                    codeCache = {
+                        python: data.python != null ? data.python : null,
+                        cpp: data.cpp != null ? data.cpp : null,
+                        cuda: data.cuda != null ? data.cuda : null,
+                        go: data.go != null ? data.go : null,
+                    };
+                    setActiveTab(currentLang);
+                    showCodeForLang(currentLang);
+                })
+                .catch(function (e) {
+                    errEl.style.display = "block";
+                    errEl.textContent = String(e.message || e);
+                    codeViewer.textContent = "// Не удалось загрузить эталонный код с сервера.";
+                    codeViewer.classList.add("code-placeholder");
+                });
+
+            document.getElementById("btn-copy-code").onclick = function () {
+                const text = codeViewer.textContent || "";
+                if (!text || text === "Загрузка кода…") return;
+                function done(ok) {
+                    const b = document.getElementById("btn-copy-code");
+                    const prev = b.textContent;
+                    b.textContent = ok ? "Скопировано" : "Ошибка копирования";
+                    setTimeout(function () {
+                        b.textContent = prev;
+                    }, 1600);
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        done(true);
+                    }).catch(function () {
+                        done(false);
+                    });
+                } else {
+                    done(false);
+                }
+            };
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            initNavbar();
+            initPage();
+        });
+    </script>
+</body>
+</html>
