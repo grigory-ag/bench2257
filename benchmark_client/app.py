@@ -473,6 +473,56 @@ class TaskCard(ctk.CTkFrame):
 
     # ------------------------------------------------------------------
 
+    def _ensure_data_files_exist(self) -> bool:
+        required_files = [
+            BENCHMARK_CLIENT_ROOT / "M1.dat",
+            BENCHMARK_CLIENT_ROOT / "M2.dat",
+            BENCHMARK_CLIENT_ROOT / "T.dat",
+        ]
+        if all(path.exists() for path in required_files):
+            return True
+
+        try:
+            self._set_status("Генерация тестовых матриц... (занимает ~5 секунд)", "#f0a500")
+
+            generator_path = SCRIPTS_DIR / "data_generator.py"
+            if not generator_path.exists():
+                raise RuntimeError(f"Файл генератора данных не найден:\n{generator_path}")
+
+            python_cmd = sys.executable if not getattr(sys, "frozen", False) else find_python_cmd()
+            if python_cmd is None:
+                raise RuntimeError("Интерпретатор Python не найден для генерации тестовых матриц.")
+
+            result = subprocess.run(
+                [
+                    python_cmd,
+                    str(generator_path),
+                    "--n",
+                    "4000",
+                    "--out-dir",
+                    str(BENCHMARK_CLIENT_ROOT),
+                ],
+                cwd=str(BENCHMARK_CLIENT_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=600,
+                **_subprocess_no_window_kwargs(),
+            )
+            if result.returncode != 0:
+                stderr_text = (result.stderr or "").strip()
+                stdout_text = (result.stdout or "").strip()
+                raise RuntimeError(stderr_text or stdout_text or f"Генератор завершился с кодом {result.returncode}")
+
+            self._set_status("Готово", "gray")
+            return True
+        except Exception as exc:
+            self._set_status("Ошибка генерации данных", "#e05c5c")
+            messagebox.showerror(
+                "Ошибка генерации тестовых матриц",
+                f"Не удалось подготовить M1.dat, M2.dat и T.dat:\n{exc}",
+            )
+            return False
+
     def _run_script(self, lang: str, script_path: Path) -> float:
         """Compile (if needed) and run the script. Returns elapsed time in ms."""
 
@@ -595,6 +645,9 @@ class TaskCard(ctk.CTkFrame):
 
     def _worker(self, custom_script_path: Path | None = None, code_text: str | None = None) -> None:
         try:
+            if not self._ensure_data_files_exist():
+                return
+
             lang = self._language
             if custom_script_path is None:
                 ext = EXT_MAP.get(lang, "")

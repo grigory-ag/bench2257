@@ -243,6 +243,7 @@
     <nav class="navbar">
         <a href="/index.html" class="nav-brand">BENCH.</a>
         <div class="nav-links">
+            <a href="/about.html">О проекте</a>
             <a href="/index.html">Аналитика</a>
             <a href="/leaderboard.html">Рейтинг</a>
             <a href="/dashboard.html">Задачи и Теория</a>
@@ -348,31 +349,31 @@
                         return;
                     }
                     if (action === "approve") {
-                        updateStatus(row, "approved");
+                        updateStatus(row.id, "approved");
                         return;
                     }
                     if (action === "reject") {
-                        updateStatus(row, "rejected");
+                        updateStatus(row.id, "rejected");
                     }
                 });
             });
         }
 
-        async function updateStatus(row, nextStatus) {
+        async function updateStatus(id, status) {
             try {
-                const res = await fetch("/api/admin/submissions/" + row.id + "/status", {
+                const res = await fetch("/api/admin/submissions/" + id + "/status", {
                     method: "PATCH",
                     headers: {
                         Authorization: "Bearer " + token,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ status: nextStatus }),
+                    body: JSON.stringify({ status: status }),
                 });
                 if (!res.ok) {
                     alert("Не удалось обновить статус (" + res.status + ").");
                     return;
                 }
-                await init();
+                await initPage();
             } catch (error) {
                 alert("Ошибка сети при обновлении статуса.");
             }

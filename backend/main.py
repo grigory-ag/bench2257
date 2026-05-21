@@ -1,11 +1,14 @@
 import os
+import time
+import zipfile
+from io import BytesIO
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, status, Form
+from fastapi import FastAPI, Depends, HTTPException, status, Form, Request
 from pydantic import ValidationError
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy import create_engine, func, or_
 from sqlalchemy.orm import sessionmaker, Session
 from jose import jwt, JWTError
@@ -20,6 +23,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Bench API")
+registration_attempts: dict[str, list[float]] = {}
 
 # Имена задач, совпадающие с клиентом бенчмарка и frontend/js/task-translations.js
 KNOWN_TASK_NAMES = frozenset(
@@ -47,6 +51,17 @@ def _scripts_root() -> Path:
     return docker_style
 
 
+def _benchmark_client_root() -> Path:
+    here = Path(__file__).resolve().parent
+    docker_style = here / "benchmark_client"
+    if docker_style.is_dir():
+        return docker_style
+    repo_style = here.parent / "benchmark_client"
+    if repo_style.is_dir():
+        return repo_style
+    return docker_style
+
+
 def _is_safe_task_name(name: str) -> bool:
     if not name or name.strip() != name:
         return False
@@ -64,8 +79,37 @@ def _read_script_file(path: Path) -> str | None:
         return None
 
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+DbSession = Annotated[Session, Depends(get_db)]
+
+
+def _get_approved_submission_code(db: Session, task_name: str, language: str) -> dict[str, str] | None:
+    row = (
+        db.query(Submission.source_code, User.username)
+        .join(User, Submission.user_id == User.id)
+        .filter(
+            Submission.task_name == task_name,
+            Submission.language == language,
+            Submission.status == "approved",
+            Submission.source_code.isnot(None),
+        )
+        .order_by(Submission.time_ms.asc())
+        .first()
+    )
+    if row is None:
+        return None
+    return {"code": row.source_code, "author": row.username}
+
+
 @app.get("/api/tasks/{task_name}/code")
-async def get_task_reference_code(task_name: str):
+async def get_task_reference_code(task_name: str, db: DbSession):
     """
     Публичная выдача эталонных скриптов из benchmark_client/scripts/
     (python/cpp/cuda/go, имя файла = имя задачи + расширение).
@@ -88,18 +132,24 @@ async def get_task_reference_code(task_name: str):
         ("cpp", root / "cpp" / f"{task_name}.cpp"),
         ("cuda", root / "cuda" / f"{task_name}.cu"),
         ("go", root / "go" / f"{task_name}.go"),
+        ("matlab", root / "matlab" / f"{task_name}.m"),
     )
 
-    return {key: _read_script_file(path) for key, path in mapping}
+    result = {}
+    for language, path in mapping:
+        submission_code = _get_approved_submission_code(db, task_name, language)
+        if submission_code is not None:
+            result[language] = submission_code
+            continue
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+        file_code = _read_script_file(path)
+        result[language] = (
+            {"code": file_code, "author": "Core Team"}
+            if file_code is not None
+            else None
+        )
 
-DbSession = Annotated[Session, Depends(get_db)]
+    return result
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: DbSession):
     credentials_exception = HTTPException(
@@ -124,10 +174,26 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @app.post("/auth/register")
 async def register(
+    request: Request,
     username: Annotated[str, Form(...)], 
     password: Annotated[str, Form(...)], 
     db: DbSession
 ):
+    now = time.time()
+    ip_address = request.client.host if request.client else "unknown"
+    recent_attempts = [
+        ts for ts in registration_attempts.get(ip_address, [])
+        if now - ts < 3600
+    ]
+    if len(recent_attempts) >= 5:
+        registration_attempts[ip_address] = recent_attempts
+        raise HTTPException(
+            status_code=429,
+            detail="Слишком много попыток регистрации. Попробуйте позже.",
+        )
+    recent_attempts.append(now)
+    registration_attempts[ip_address] = recent_attempts
+
     try:
         UserCreate(username=username, password=password)
     except ValidationError:
@@ -284,10 +350,31 @@ async def get_global_leaderboard(db: DbSession):
 
 @app.get("/api/downloads/archive")
 async def download_archive():
-    file_path = "dummy_archive.zip"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Archive not found")
-    return FileResponse(file_path, media_type="application/zip", filename="env_tools.zip")
+    client_root = _benchmark_client_root()
+    if not client_root.is_dir():
+        raise HTTPException(status_code=404, detail="Benchmark client directory not found")
+
+    excluded_dirs = {"build", "dist", "venv", "__pycache__"}
+    excluded_files = {".env"}
+    excluded_extensions = {".dat", ".csv", ".bin", ".spec"}
+    buffer = BytesIO()
+
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in client_root.rglob("*"):
+            relative_path = path.relative_to(client_root)
+            parts = set(relative_path.parts)
+            if parts.intersection(excluded_dirs):
+                continue
+            if path.name in excluded_files:
+                continue
+            if path.suffix.lower() in excluded_extensions:
+                continue
+            if path.is_file():
+                archive.write(path, relative_path.as_posix())
+
+    buffer.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="BenchmarkSystem.zip"'}
+    return StreamingResponse(buffer, media_type="application/zip", headers=headers)
 
 
 @app.post("/api/submissions", response_model=SubmissionResponse)

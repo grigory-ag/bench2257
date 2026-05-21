@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    env_file: .env
+    restart: always
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    env_file: .env
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - ./benchmark_client:/app/benchmark_client
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata_dev:

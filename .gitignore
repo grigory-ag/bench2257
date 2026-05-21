@@ -1,76 +1,35 @@
-# === Секреты и окружение ===
-.env
-.env.*
-!.env.example
-
+# Python virtual environments
 venv/
 env/
 .venv/
 
-# === Python ===
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-
-.eggs/
-*.egg
-*.egg-info/
-
-# PyInstaller / локальная сборка клиента (spec в корне репозитория)
-/*.spec
-*.exe
-
-# Каталоги сборки (в т.ч. benchmark_client/build, benchmark_client/dist)
-build/
-dist/
-
-# === Кэш и тесты ===
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-.tox/
-.nox/
-
-# === Артефакты запуска бенчмарков (локально) ===
-*.dat
-*.ppm
-*.bin
-history.csv
-M1.dat
-M2.dat
-M3.dat
-T.dat
-
-# === Backend: загрузки и zip из Dockerfile ===
-uploads/
-dummy_archive.zip
-
-# === Базы данных (локальные) ===
-*.sqlite3
-*.db
-pgdata_dev/
-
-# === Логи ===
-*.log
-logs/
-
-# === IDE и инструменты ===
-.vscode/
-.idea/
-*.swp
-*~
-.cursor/
-
-# === ОС ===
+# System files
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
+
+# Secrets
+.env
+
+# Database and Python cache
+pgdata_dev/
+pgdata_prod/
+__pycache__/
+*.pyc
+
+# Heavy generated benchmark files
+*.dat
+*.csv
+*.ppm
+frames.bin
+history.csv
+*.mat
+*.asv
+
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Executables: ignore all except the packaged benchmark client
+*.exe
+!benchmark_client/BenchmarkClient.exe

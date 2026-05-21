@@ -87,6 +87,24 @@
             letter-spacing: -0.7px;
             line-height: 1.12;
         }
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 9px 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
+        }
+        .btn-back:hover {
+            color: var(--text-main);
+            border-color: #484f58;
+            background: #161b22;
+        }
         .hub-lead {
             color: var(--text-muted);
             font-size: 17px;
@@ -273,6 +291,7 @@
     <nav class="navbar">
         <a href="/index.html" class="nav-brand">BENCH.</a>
         <div class="nav-links">
+            <a href="/about.html">О проекте</a>
             <a href="/index.html">Аналитика</a>
             <a href="/leaderboard.html">Рейтинг</a>
             <a href="/dashboard.html" class="active">Задачи и Теория</a>
@@ -289,6 +308,7 @@
         </div>
 
         <div id="hub-content" style="display: none">
+            <a class="btn-back" href="/dashboard.html">← Назад к задачам</a>
             <h1 class="hub-title" id="hub-title"></h1>
             <p class="hub-lead" id="hub-lead">Паспорт задачи: теория, техническое задание и эталонные реализации.</p>
             <p id="hub-warn" class="unknown-task" style="display: none"></p>
@@ -312,11 +332,12 @@
                     <button type="button" class="code-tab" data-lang="cpp" role="tab" aria-selected="false">C++</button>
                     <button type="button" class="code-tab" data-lang="cuda" role="tab" aria-selected="false">CUDA</button>
                     <button type="button" class="code-tab" data-lang="go" role="tab" aria-selected="false">Go</button>
+                    <button type="button" class="code-tab" data-lang="matlab" role="tab" aria-selected="false">MATLAB</button>
                 </div>
                 <div class="code-pane">
                     <pre class="code-scroll"><code id="code-viewer" class="code-placeholder">Загрузка кода…</code></pre>
                 </div>
-                <p class="code-author">Автор эталонного решения: Core Team</p>
+                <p class="code-author" id="code-author">Автор эталонного решения: Core Team</p>
                 <button type="button" class="btn-copy" id="btn-copy-code">Копировать код</button>
                 <p class="code-load-err" id="code-load-err" style="display: none"></p>
             </section>
@@ -461,6 +482,7 @@
             const theoryBody = document.getElementById("hub-theory-body");
             const profileLink = document.getElementById("hub-profile-link");
             const codeViewer = document.getElementById("code-viewer");
+            const codeAuthor = document.getElementById("code-author");
             const errEl = document.getElementById("code-load-err");
 
             if (!taskName) {
@@ -493,12 +515,26 @@
                     "Нет записи в taskDescriptions для «" + taskName + "» — добавьте описание на фронтенде.";
             }
 
-            let codeCache = { python: null, cpp: null, cuda: null, go: null };
+            let codeCache = { python: null, cpp: null, cuda: null, go: null, matlab: null };
             let currentLang = "python";
+
+            function normalizeCodeEntry(entry) {
+                if (entry == null) return null;
+                if (typeof entry === "string") {
+                    return { code: entry, author: "Core Team" };
+                }
+                return {
+                    code: entry.code != null ? entry.code : null,
+                    author: entry.author || "Core Team",
+                };
+            }
 
             function showCodeForLang(lang) {
                 currentLang = lang;
-                const text = codeCache[lang];
+                const entry = codeCache[lang];
+                const text = entry ? entry.code : null;
+                const author = entry ? entry.author : "Core Team";
+                codeAuthor.textContent = "Автор эталонного решения: " + author;
                 codeViewer.classList.remove("code-placeholder");
                 if (text == null || text === "") {
                     codeViewer.textContent =
@@ -553,10 +589,11 @@
                 })
                 .then(function (data) {
                     codeCache = {
-                        python: data.python != null ? data.python : null,
-                        cpp: data.cpp != null ? data.cpp : null,
-                        cuda: data.cuda != null ? data.cuda : null,
-                        go: data.go != null ? data.go : null,
+                        python: normalizeCodeEntry(data.python),
+                        cpp: normalizeCodeEntry(data.cpp),
+                        cuda: normalizeCodeEntry(data.cuda),
+                        go: normalizeCodeEntry(data.go),
+                        matlab: normalizeCodeEntry(data.matlab),
                     };
                     setActiveTab(currentLang);
                     showCodeForLang(currentLang);

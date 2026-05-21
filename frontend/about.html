@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>BENCH — О проекте</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0d1117;
+            --border-color: #30363d;
+            --accent-blue: #1f6feb;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 30px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .nav-brand {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-main); background-color: #21262d; }
+        .nav-links a.active { color: var(--accent-blue); background-color: #21262d; }
+        .logout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .logout-btn:hover { background-color: #21262d; border-color: var(--text-muted); }
+        .about-page {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 56px clamp(20px, 4vw, 48px);
+            box-sizing: border-box;
+        }
+        .about-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: clamp(28px, 5vw, 52px);
+        }
+        h1 {
+            margin: 0 0 20px;
+            font-size: clamp(32px, 5vw, 48px);
+            line-height: 1.1;
+            letter-spacing: -0.7px;
+        }
+        .lead {
+            color: #c9d1d9;
+            font-size: 18px;
+            line-height: 1.7;
+            margin: 0 0 34px;
+            max-width: 760px;
+        }
+        h2 {
+            margin: 0 0 18px;
+            font-size: 22px;
+        }
+        .features {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .features li {
+            border-top: 1px solid var(--border-color);
+            padding: 16px 0 0;
+            color: var(--text-main);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .features li:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+        .team-section {
+            margin-top: 42px;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .team-member {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr);
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            background: #010409;
+        }
+        .team-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #21262d;
+            border: 1px solid #484f58;
+        }
+        .team-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .team-name {
+            margin: 0 0 6px;
+            color: var(--text-main);
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .team-role {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+        @media (max-width: 760px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/index.html" class="nav-brand">BENCH.</a>
+        <div class="nav-links">
+            <a href="/about.html" class="active">О проекте</a>
+            <a href="/index.html">Аналитика</a>
+            <a href="/leaderboard.html">Рейтинг</a>
+            <a href="/dashboard.html">Задачи и Теория</a>
+            <a href="/task.html" id="profileLink">Профиль</a>
+            <a href="/admin.html" id="adminLink" style="display:none">Админ-панель</a>
+            <a href="/" class="logout-btn" id="authLink">Выйти</a>
+        </div>
+    </nav>
+
+    <main class="about-page">
+        <section class="about-panel">
+            <h1>Проект 2257: Система автоматизированного бенчмаркинга</h1>
+            <p class="lead">
+                Универсальный сервис для автоматизированного тестирования производительности реализаций алгоритмов, сравнения результатов на разных языках и публикации проверенных решений.
+            </p>
+
+            <h2>Возможности</h2>
+            <ul class="features">
+                <li>Автоматическое определение железа</li>
+                <li>Изолированный замер времени</li>
+                <li>Модерация</li>
+                <li>Интерактивный дашборд</li>
+            </ul>
+
+            <section class="team-section" aria-labelledby="team-heading">
+                <h2 id="team-heading">Команда</h2>
+                <div class="team-grid">
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-4.jpg" alt="Аватар участника 1"></div>
+                        <div>
+                            <p class="team-name">Тьяго Сарайва Тейшейра</p>
+                            <p class="team-role">Руководитель</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-8.webp" alt="Аватар участника 2"></div>
+                        <div>
+                            <p class="team-name">Пашковская Валерия</p>
+                            <p class="team-role">Руководитель</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-3.webp" alt="Аватар участника 3"></div>
+                        <div>
+                            <p class="team-name">Агафонов Григорий</p>
+                            <p class="team-role">C++ разработчик</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-2.webp" alt="Аватар участника 4"></div>
+                        <div>
+                            <p class="team-name">Ашуров Сафар</p>
+                            <p class="team-role">Go разработчик</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-1.jpg" alt="Аватар участника 5"></div>
+                        <div>
+                            <p class="team-name">Ескулов Ален</p>
+                            <p class="team-role">Matlab разработчик</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-9.webp" alt="Аватар участника 6"></div>
+                        <div>
+                            <p class="team-name">Ленкова Анна</p>
+                            <p class="team-role">дизайнер</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-5.jpg" alt="Аватар участника 7"></div>
+                        <div>
+                            <p class="team-name">Старостина Мария</p>
+                            <p class="team-role">СЕО</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-6.jpg" alt="Аватар участника 8"></div>
+                        <div>
+                            <p class="team-name">Черненко Виктория</p>
+                            <p class="team-role">Python разработчик</p>
+                        </div>
+                    </article>
+                    <article class="team-member">
+                        <div class="team-avatar"><img src="/assets/team/avatar-7.jpg" alt="Аватар участника 8"></div>
+                        <div>
+                            <p class="team-name">Яковлев Лев</p>
+                            <p class="team-role">Cuda разработчик</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const profileLink = document.getElementById("profileLink");
+        const authLink = document.getElementById("authLink");
+        const adminLink = document.getElementById("adminLink");
+
+        function handleLogoutClick(event) {
+            event.preventDefault();
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+
+        if (!token) {
+            profileLink.style.display = "none";
+            authLink.textContent = "Войти / Регистрация";
+            authLink.setAttribute("href", "login.html");
+            authLink.classList.remove("logout-btn");
+        } else {
+            authLink.addEventListener("click", handleLogoutClick);
+            fetch("/auth/me", { headers: { Authorization: "Bearer " + token } })
+                .then((res) => (res.ok ? res.json() : null))
+                .then((user) => {
+                    if (user && user.is_admin === true) {
+                        adminLink.style.display = "block";
+                    }
+                })
+                .catch(function () {});
+        }
+    </script>
+</body>
+</html>
