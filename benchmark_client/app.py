@@ -18,7 +18,8 @@ import requests
 #  Constants
 # ─────────────────────────────────────────────
 
-API_BASE = "http://localhost:3000"
+# API_BASE = "http://localhost:3000"
+API_BASE = "http://172.18.130.50:5303"
 
 LANGUAGES = ["CPP", "Python", "CUDA", "Go"]
 
